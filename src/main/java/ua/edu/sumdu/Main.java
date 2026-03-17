@@ -11,6 +11,21 @@ public class Main {
        // Вводимо дані про кожну книгу: назва, автор, рік, ціна
        for(int i = 0; i < books.length; i++){
            //Input data from keyboard
+           System.out.println("Enter Book " + (i + 1));
+
+           System.out.print("Title: ");
+           String title = scanner.nextLine();
+
+           System.out.print("Author: ");
+           String author = scanner.nextLine();
+
+           System.out.print("Year: ");
+           int year = scanner.nextInt();
+
+           System.out.print("Price: ");
+           Double price = scanner.nextDouble();
+
+           books[i] = new Book(title, author, year, price);
        }
 
         // Виводимо масив на екран

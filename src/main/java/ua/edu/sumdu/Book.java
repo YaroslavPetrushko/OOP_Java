@@ -1,5 +1,7 @@
 package ua.edu.sumdu;
 
+import java.util.Objects;
+
 public class Book {
     private String title;
     private String author;
@@ -13,23 +15,12 @@ public class Book {
         this.price = price;
     }
 
-    public Book() {
+    public String getTitle() {
+        return title;
     }
 
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    public int getYear() {
-        return year;
-    }
-
-    public void setYear(int year) {
-        this.year = year;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getAuthor() {
@@ -40,11 +31,41 @@ public class Book {
         this.author = author;
     }
 
-    public String getTitle() {
-        return title;
+    public int getYear() {
+        return year;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setYear(int year) {
+        this.year = year;
     }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Book{" +
+                "title='" + title + '\'' +
+                ", author='" + author + '\'' +
+                ", year=" + year +
+                ", price=" + price +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Book book = (Book) o;
+        return year == book.year &&
+                Double.compare(price, book.price) == 0 &&
+                Objects.equals(title, book.title) &&
+                Objects.equals(author, book.author);
+    }
+
 }
