@@ -24,6 +24,7 @@ public class Main {
 
            System.out.print("Price: ");
            Double price = scanner.nextDouble();
+           scanner.nextLine();
 
            books[i] = new Book(title, author, year, price);
        }
@@ -32,7 +33,7 @@ public class Main {
        System.out.println("\nBooks list:");
 
        for(Book book : books){
-           System.out.println(book);
+           System.out.println(book.toString());
        }
 
        scanner.close();
