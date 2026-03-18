@@ -6,13 +6,8 @@ public class Main {
     static void main(String[] args) {
        Scanner scanner = new Scanner(System.in);
 
-       // Користувач вводить кількість книг які буде додавати
-       System.out.print("Enter number of books: ");
-       int n = scanner.nextInt();
-        scanner.nextLine();
-
         // Масив з книгами
-       Book[] books = new Book[n];
+       Book[] books = new Book[5];
 
        // Вводимо дані про кожну книгу: назва, автор, рік, ціна
        for(int i = 0; i < books.length; i++){
