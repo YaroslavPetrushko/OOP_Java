@@ -14,12 +14,13 @@ public class Book {
     private int pages;
 
     public Book(String title, String author, int year, double price, String genre, int pages) {
-        this.title = title;
-        this.author = author;
-        this.year = year;
-        this.price = price;
-        this.genre = genre;
-        this.pages = pages;
+        // Використовуємо сетери, щоб не дублювати логіку валідації
+        setTitle(title);
+        setAuthor(author);
+        setYear(year);
+        setPrice(price);
+        setGenre(genre);
+        setPages(pages);
     }
 
     public String getTitle() { return title; }
