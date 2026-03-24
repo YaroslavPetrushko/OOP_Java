@@ -25,9 +25,15 @@ public class Main {
 
            System.out.print("Price: ");
            Double price = scanner.nextDouble();
+
+           System.out.print("Genre: ");
+           String genre = scanner.nextLine();
+
+           System.out.print("Pages: ");
+           int pages = scanner.nextInt();
            scanner.nextLine();
 
-           books[i] = new Book(title, author, year, price);
+           books[i] = new Book(title, author, year, price, genre, pages);
        }
 
         // Виводимо масив на екран

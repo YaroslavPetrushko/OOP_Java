@@ -7,12 +7,16 @@ public class Book {
     private String author;
     private int year;
     private double price;
+    private String genre;
+    private int pages;
 
-    public Book(String title, String author, int year, double price) {
+    public Book(String title, String author, int year, double price, String genre, int pages) {
         this.title = title;
         this.author = author;
         this.year = year;
         this.price = price;
+        this.genre = genre;
+        this.pages = pages;
     }
 
     public String getTitle() {
@@ -47,6 +51,13 @@ public class Book {
         this.price = price;
     }
 
+    public String getGenre() {return genre;}
+
+    public void setGenre(String genre) {this.genre = genre;}
+
+    public int getPages() {return pages;}
+
+    public void setPages(int pages) {this.pages = pages;}
 
     @Override
     public String toString() {
@@ -55,6 +66,8 @@ public class Book {
                 ", author='" + author + '\'' +
                 ", year=" + year +
                 ", price=" + price +
+                ", genre='" + genre + '\'' +
+                ", pages=" + pages +
                 '}';
     }
 
@@ -65,7 +78,13 @@ public class Book {
         return year == book.year &&
                 Double.compare(price, book.price) == 0 &&
                 Objects.equals(title, book.title) &&
-                Objects.equals(author, book.author);
+                Objects.equals(author, book.author) &&
+                Objects.equals(genre, book.genre)&&
+                pages == book.pages;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, author, year, price, genre, pages);
+    }
 }
