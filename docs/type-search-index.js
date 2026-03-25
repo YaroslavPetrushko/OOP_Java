@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html","k":"18"},{"p":"ua.edu.sumdu","l":"Book"},{"p":"ua.edu.sumdu","l":"InvalidBookDataException","k":"13"},{"p":"ua.edu.sumdu","l":"Main"}];updateSearchResults();
