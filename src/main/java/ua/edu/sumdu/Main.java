@@ -54,24 +54,31 @@ public class Main {
      * @param books - масив Book[], для додавання даних про книгу до масиву
      */
     private static void createBook(int i, Book [] books){
-        System.out.println("\n--- New Book - #"+(i+1)+"/5 ---");
-        // Введення даних з клавіатури
-        try {
-            String title  = readNonEmptyString("Title:  ");
-            String author = readNonEmptyString("Author: ");
-            int year   = readInt("Year:   ");
-            double price  = readDouble("Price:  ");
-            String genre  = readNonEmptyString("Genre:  ");
-            int pages  = readInt("Pages:  ");
 
-            // Додаємо дані до масиву
-            books[i] = new Book(title, author, year, price, genre, pages);
+        while(true) {
 
-            System.out.println("  [OK] Book added successfully.\n");
+            System.out.println("\n--- New Book - #" + (i + 1) + "/5 ---");
+            // Введення даних з клавіатури
+            try {
+                String title = readNonEmptyString("Title:  ");
+                String author = readNonEmptyString("Author: ");
+                int year = readInt("Year:   ");
+                double price = readDouble("Price:  ");
+                String genre = readNonEmptyString("Genre:  ");
+                int pages = readInt("Pages:  ");
 
-        } catch (InvalidBookDataException e) {
-            // Ловимо помилку валідації
-            System.out.println("  [!] Validation error: " + e.getMessage() + "\n");
+                // Додаємо дані до масиву
+                books[i] = new Book(title, author, year, price, genre, pages);
+
+                System.out.println("  [OK] Book added successfully.\n");
+
+                break; // Вихід з циклу якщо книгу успішно додано
+
+            } catch (InvalidBookDataException e) {
+                // Ловимо помилку валідації
+                System.out.println("  [!] Validation error: " + e.getMessage() + "\n");
+                System.out.println("  Please re-enter the book.\n");
+            }
         }
     }
 
