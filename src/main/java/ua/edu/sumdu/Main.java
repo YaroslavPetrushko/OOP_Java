@@ -1,85 +1,131 @@
 package ua.edu.sumdu;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 /**
  * Точка входу в програму.
  *
- * <p>Створює масив з 5 книгами, користувач вводить дані з клавіатури,
- * після чого виводить масив в термінал як форматований рядок.
+ * <p>Реалізує консольне меню з трьома пунктами:
+ * <ol>
+ *   <li>Створити новий об'єкт {@link Book}</li>
+ *   <li>Вивести інформацію про всі збережені об'єкти</li>
+ *   <li>Завершити роботу</li>
+ * </ol>
  * Усі помилки введення (нечислові дані, порожні рядки, некоректні значення)
  * перехоплюються та повідомляються користувачу без завершення програми.</p>
  */
 public class Main {
 
-    /** Кількість книг у масиві. За замовчуванням = 5. */
-    private static final int BOOKNUMBER=5;
+    /** Список книг, що накопичується під час роботи програми. */
+    private static final List<Book> books = new ArrayList<>();
 
-    /** Спільний Scanner для всієї програми.  */
+    /** Спільний Scanner для всієї програми. */
     private static final Scanner scanner = new Scanner(System.in);
 
     /**
-     * Запускає цикл та викликає метод для створення книг. Виводить масив книг в термінал.
+     * Запускає консольний цикл меню.
      *
      * @param args аргументи командного рядка (не використовуються)
      */
     public static void main(String[] args) {
-        // Масив з книгами
-       Book[] books = new Book[BOOKNUMBER];
+        System.out.println("=== Book Manager ===");
 
-       // Вводимо дані про кожну книгу: назва, автор, рік, ціна, жанр, кількість сторінок
-       for(int i = 0; i < books.length; i++){
-       createBook(i, books);
-       }
+        boolean running = true;
+        while (running) {
+            printMenu();
+            int choice = readMenuChoice();
 
-        // Виводимо масив на екран
-       System.out.println("\nBooks list:");
+            switch (choice) {
+                case 1 -> createBook();
+                case 2 -> printAllBooks();
+                case 3 -> {
+                    System.out.println("Goodbye!");
+                    running = false;
+                }
+                default -> System.out.println("  [!] Unknown option. Please enter 1, 2 or 3.\n");
+            }
+        }
 
-       for(Book book : books){
-           System.out.println(book.toString());
-       }
-
-       scanner.close();
+        scanner.close();
     }
 
     // ---------------------------------------------------------------
-    // Створення книги
+    // Меню
     // ---------------------------------------------------------------
 
     /**
-     * Зчитує дані нової книги, що вводить користувач з клавіатури та додає її до масиву.
-     * При будь-якій помилці введення виводить повідомлення і користувач заново вводить дані.
-     *
-     * @param i - число, місце поточної книги в масиві
-     * @param books - масив Book[], для додавання даних про книгу до масиву
+     * Виводить головне меню на екран.
      */
-    private static void createBook(int i, Book [] books){
+    private static void printMenu() {
+        System.out.println("--------------------");
+        System.out.println("1. Add new book");
+        System.out.println("2. Show all books");
+        System.out.println("3. Exit");
+        System.out.print("Your choice: ");
+    }
 
-        while(true) {
-
-            System.out.println("\n--- New Book - #" + (i + 1) + "/5 ---");
-            // Введення даних з клавіатури
-            try {
-                String title = readNonEmptyString("Title:  ");
-                String author = readNonEmptyString("Author: ");
-                int year = readInt("Year:   ");
-                double price = readDouble("Price:  ");
-                String genre = readNonEmptyString("Genre:  ");
-                int pages = readInt("Pages:  ");
-
-                // Додаємо дані до масиву
-                books[i] = new Book(title, author, year, price, genre, pages);
-
-                System.out.println("  [OK] Book added successfully.\n");
-
-                break; // Вихід з циклу якщо книгу успішно додано
-
-            } catch (InvalidBookDataException e) {
-                // Ловимо помилку валідації
-                System.out.println("  [!] Validation error: " + e.getMessage() + "\n");
-                System.out.println("  Please re-enter the book.\n");
-            }
+    /**
+     * Зчитує вибір пункту меню (ціле число).
+     * Якщо введено нечислове значення — повертає {@code -1}.
+     *
+     * @return вибраний пункт меню або {@code -1} при помилці введення
+     */
+    private static int readMenuChoice() {
+        String line = scanner.nextLine().trim();
+        try {
+            return Integer.parseInt(line);
+        } catch (NumberFormatException e) {
+            return -1;
         }
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 1: Створення книги
+    // ---------------------------------------------------------------
+
+    /**
+     * Інтерактивно зчитує дані нової книги та додає її до списку.
+     * При будь-якій помилці введення виводить повідомлення і повертається до меню.
+     */
+    private static void createBook() {
+        System.out.println("\n--- New Book ---");
+        try {
+            String title  = readNonEmptyString("Title:  ");
+            String author = readNonEmptyString("Author: ");
+            int    year   = readInt("Year:   ");
+            double price  = readDouble("Price:  ");
+            String genre  = readNonEmptyString("Genre:  ");
+            int    pages  = readInt("Pages:  ");
+
+            Book book = new Book(title, author, year, price, genre, pages);
+            books.add(book);
+            System.out.println("  [OK] Book added successfully.\n");
+
+        } catch (InvalidBookDataException e) {
+            System.out.println("  [!] Validation error: " + e.getMessage() + "\n");
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 2: Виведення всіх книг
+    // ---------------------------------------------------------------
+
+    /**
+     * Виводить усі збережені книги у форматованому вигляді.
+     * Якщо список порожній — повідомляє про це.
+     */
+    private static void printAllBooks() {
+        System.out.println("\n--- Book List ---");
+        if (books.isEmpty()) {
+            System.out.println("  (no books added yet)\n");
+            return;
+        }
+        for (int i = 0; i < books.size(); i++) {
+            System.out.println("  " + (i + 1) + ". " + books.get(i));
+        }
+        System.out.println();
     }
 
     // ---------------------------------------------------------------
@@ -88,7 +134,7 @@ public class Main {
 
     /**
      * Зчитує непорожній рядок із клавіатури.
-     * Повторює запит, доки користувач не введе хоча б один непробільний символ.
+     * Повторює запит доти, доки користувач не введе хоча б один непробільний символ.
      *
      * @param prompt текст підказки, що виводиться перед полем введення
      * @return непорожній рядок (після trim)
