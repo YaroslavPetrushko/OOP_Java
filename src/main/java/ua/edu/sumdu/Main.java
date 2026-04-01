@@ -92,12 +92,12 @@ public class Main {
     private static void createBook() {
         System.out.println("\n--- New Book ---");
         try {
-            String title  = readNonEmptyString("Title:  ");
-            String author = readNonEmptyString("Author: ");
-            int    year   = readInt("Year:   ");
-            double price  = readDouble("Price:  ");
-            String genre  = readNonEmptyString("Genre:  ");
-            int    pages  = readInt("Pages:  ");
+            String title    = readNonEmptyString("Title:  ");
+            String author   = readNonEmptyString("Author: ");
+            int    year     = readInt("Year:   ");
+            double price    = readDouble("Price:  ");
+            Genre genre     = readEnum("Genre",Genre.values());
+            int    pages    = readInt("Pages:  ");
 
             Book book = new Book(title, author, year, price, genre, pages);
             books.add(book);
@@ -199,4 +199,20 @@ public class Main {
             }
         }
     }
+
+    // Відображає меню вибору жанру та повертає обране значення enum
+    private static <T extends Enum<T>> T readEnum(String label, T[] values) {
+        System.out.println("  Select " + label + ":");
+        for (int i = 0; i < values.length; i++) {
+            System.out.println("    " + (i + 1) + ". " + values[i]);
+        }
+        while (true) {
+            int choice = readInt("  " + label + " [1-" + values.length + "]: ");
+            if (choice >= 1 && choice <= values.length) {
+                return values[choice - 1];
+            }
+            System.out.println("  [!] Enter a number from 1 to " + values.length + ".");
+        }
+    }
+
 }

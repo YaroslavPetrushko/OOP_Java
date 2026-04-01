@@ -16,7 +16,7 @@ import java.time.Year;
  *   <li>{@code author} — автор книги (не порожній)</li>
  *   <li>{@code year}   — рік видання (від 1 до поточного року включно)</li>
  *   <li>{@code price}  — ціна книги (≥ 0)</li>
- *   <li>{@code genre}  — жанр книги (не порожній)</li>
+ *   <li>{@code genre}  — жанр книги (enum)</li>
  *   <li>{@code pages}  — кількість сторінок (> 0)</li>
  * </ul>
  */
@@ -31,7 +31,7 @@ public class Book {
     private String author;
     private int year;
     private double price;
-    private String genre;
+    private Genre genre;
     private int pages;
 
     // ---------------------------------------------------------------
@@ -49,7 +49,7 @@ public class Book {
      * @param pages  кількість сторінок; має бути більше нуля
      * @throws InvalidBookDataException якщо будь-який із параметрів некоректний
      */
-    public Book(String title, String author, int year, double price, String genre, int pages) {
+    public Book(String title, String author, int year, double price, Genre genre, int pages) {
         // Використовуємо сетери, щоб не дублювати логіку валідації
         setTitle(title);
         setAuthor(author);
@@ -179,7 +179,7 @@ public class Book {
      *
      * @return жанр книги
      */
-    public String getGenre() { return genre; }
+    public Genre getGenre() { return genre; }
 
     /**
      * Встановлює жанр книги.
@@ -187,11 +187,11 @@ public class Book {
      * @param genre жанр книги; не може бути {@code null} або порожнім рядком
      * @throws InvalidBookDataException якщо {@code genre} порожній або {@code null}
      */
-    public void setGenre(String genre) {
-        if (genre == null || genre.isBlank()) {
+    public void setGenre(Genre genre) {
+        if (genre == null) {
             throw new InvalidBookDataException("Genre cannot be empty.");
         }
-        this.genre = genre.trim();
+        this.genre = genre;
     }
 
     /**
