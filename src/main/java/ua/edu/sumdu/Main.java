@@ -101,7 +101,8 @@ public class Main {
 
             Book book = new Book(title, author, year, price, genre, pages);
             books.add(book);
-            System.out.println("  [OK] Book added successfully.\n");
+            System.out.println("  [OK] Book added successfully. Total Book objects ever created: "
+                    + Book.getInstanceCount() + "\n");
 
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] Validation error: " + e.getMessage() + "\n");
@@ -122,6 +123,7 @@ public class Main {
             System.out.println("  (no books added yet)\n");
             return;
         }
+        System.out.println("Total number of books: " + Book.getInstanceCount()+"\n");
         for (int i = 0; i < books.size(); i++) {
             System.out.println("  " + (i + 1) + ". " + books.get(i));
         }

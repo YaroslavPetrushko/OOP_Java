@@ -24,6 +24,8 @@ public class Book {
 
     /** Мінімально допустимий рік видання. */
     private static final int MIN_YEAR = 1;
+    /** Загальна кількість створених об'єктів Book */
+    private static int instanceCount = 0;
 
     private String title;
     private String author;
@@ -55,6 +57,7 @@ public class Book {
         setPrice(price);
         setGenre(genre);
         setPages(pages);
+        instanceCount++;
     }
 
     // ---------------------------------------------------------------
@@ -65,17 +68,23 @@ public class Book {
         if (other == null) {
             throw new InvalidBookDataException("Source book for copying cannot be null.");
         }
-        this.title     = other.title;
-        this.author    = other.author;
-        this.year      = other.year;
-        this.price     = other.price;
-        this.genre     = other.genre;
-        this.pages     = other.pages;
+        this.title      = other.title;
+        this.author     = other.author;
+        this.year       = other.year;
+        this.price      = other.price;
+        this.genre      = other.genre;
+        this.pages      = other.pages;
+        instanceCount++;
     }
 
     // ---------------------------------------------------------------
     // Геттери та сетери
     // ---------------------------------------------------------------
+
+    /** Повертає загальну кількість об'єктів Book */
+    public static int getInstanceCount() {
+        return instanceCount;
+    }
 
     /**
      * Повертає назву книги.
