@@ -1,1 +1,1 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html","k":"18"},{"p":"ua.edu.sumdu","l":"Book"},{"p":"ua.edu.sumdu","l":"InvalidBookDataException","k":"13"},{"p":"ua.edu.sumdu","l":"Main"}];updateSearchResults();
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html","k":"18"},{"p":"ua.edu.sumdu","l":"Book"},{"p":"ua.edu.sumdu","l":"Genre","k":"9"},{"p":"ua.edu.sumdu","l":"InvalidBookDataException","k":"13"},{"p":"ua.edu.sumdu","l":"Library"},{"p":"ua.edu.sumdu","l":"Main"}];updateSearchResults();
