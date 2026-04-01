@@ -58,6 +58,22 @@ public class Book {
     }
 
     // ---------------------------------------------------------------
+    // Конструктор копіювання
+    // ---------------------------------------------------------------
+
+    public Book(Book other) {
+        if (other == null) {
+            throw new InvalidBookDataException("Source book for copying cannot be null.");
+        }
+        this.title     = other.title;
+        this.author    = other.author;
+        this.year      = other.year;
+        this.price     = other.price;
+        this.genre     = other.genre;
+        this.pages     = other.pages;
+    }
+
+    // ---------------------------------------------------------------
     // Геттери та сетери
     // ---------------------------------------------------------------
 
