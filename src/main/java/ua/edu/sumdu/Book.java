@@ -6,9 +6,14 @@ import java.time.Year;
 /**
  * Представляє книгу з основними бібліографічними характеристиками.
  *
- * <p>Клас забезпечує валідацію всіх полів як у конструкторі,
- * так і в сетерах. При некоректних даних викидається
- * {@link InvalidBookDataException}.</p>
+ * <p>Клас забезпечує:</p>
+ * <ul>
+ *   <li>валідацію всіх полів у конструкторі та сетерах;</li>
+ *   <li>підрахунок загальної кількості створених екземплярів
+ *       через {@link #getInstanceCount()};</li>
+ *   <li>конструктор копіювання для незалежного дублювання об'єктів;</li>
+ *   <li>перерахування {@link Genre} для полів із фіксованим набором значень.</li>
+ * </ul>
  *
  * <p>Поля класу:</p>
  * <ul>
@@ -16,38 +21,59 @@ import java.time.Year;
  *   <li>{@code author} — автор книги (не порожній)</li>
  *   <li>{@code year}   — рік видання (від 1 до поточного року включно)</li>
  *   <li>{@code price}  — ціна книги (≥ 0)</li>
- *   <li>{@code genre}  — жанр книги (не порожній)</li>
+ *   <li>{@code genre}  — жанр книги (enum)</li>
  *   <li>{@code pages}  — кількість сторінок (> 0)</li>
  * </ul>
+ *
+ * <p>При некоректних даних викидається {@link InvalidBookDataException}.</p>
  */
 public class Book {
 
+    // ---------------------------------------------------------------
+    // Константи
+    // ---------------------------------------------------------------
+
     /** Мінімально допустимий рік видання. */
     private static final int MIN_YEAR = 1;
+
+    // ---------------------------------------------------------------
+    // Статичне поле — лічильник екземплярів
+    // ---------------------------------------------------------------
+
+    /**
+     * Загальна кількість об'єктів {@code Book}, створених за час роботи програми.
+     * Збільшується у кожному конструкторі (основному та конструкторі копіювання).
+     */
+    private static int instanceCount = 0;
+
+    // ---------------------------------------------------------------
+    // Поля екземпляра
+    // ---------------------------------------------------------------
 
     private String title;
     private String author;
     private int year;
     private double price;
-    private String genre;
+    private Genre genre;
     private int pages;
 
-    // ---------------------------------------------------------------
-    // Конструктор
+// ---------------------------------------------------------------
+    // Основний конструктор
     // ---------------------------------------------------------------
 
     /**
      * Створює об'єкт {@code Book} із повною перевіркою всіх параметрів.
+     * Збільшує лічильник {@link #instanceCount} на 1.
      *
-     * @param title  назва книги; не може бути {@code null} або порожнім рядком
-     * @param author ім'я автора; не може бути {@code null} або порожнім рядком
-     * @param year   рік видання; допустимий діапазон [1, поточний рік]
-     * @param price  ціна книги; не може бути від'ємною
-     * @param genre  жанр книги; не може бути {@code null} або порожнім рядком
-     * @param pages  кількість сторінок; має бути більше нуля
+     * @param title     назва книги; не може бути {@code null} або порожнім
+     * @param author    ім'я автора; не може бути {@code null} або порожнім
+     * @param year      рік видання; допустимий діапазон [1, поточний рік]
+     * @param price     ціна книги; не може бути від'ємною
+     * @param genre     жанр книги ({@link Genre}); не може бути {@code null}
+     * @param pages     кількість сторінок; має бути більше нуля
      * @throws InvalidBookDataException якщо будь-який із параметрів некоректний
      */
-    public Book(String title, String author, int year, double price, String genre, int pages) {
+    public Book(String title, String author, int year, double price, Genre genre, int pages) {
         // Використовуємо сетери, щоб не дублювати логіку валідації
         setTitle(title);
         setAuthor(author);
@@ -55,11 +81,51 @@ public class Book {
         setPrice(price);
         setGenre(genre);
         setPages(pages);
+        instanceCount++;
+    }
+
+    // ---------------------------------------------------------------
+    // Конструктор копіювання
+    // ---------------------------------------------------------------
+
+    /**
+     * Конструктор копіювання — створює незалежну копію переданого об'єкта.
+     *
+     * <p>{@code String} є незмінним типом, {@link Genre} — константою enum,
+     * тому поверхневого копіювання полів достатньо для
+     * незалежності двох об'єктів.</p>
+     *
+     * <p>Збільшує лічильник {@link #instanceCount} на 1.</p>
+     *
+     * @param other джерело для копіювання; не може бути {@code null}
+     * @throws InvalidBookDataException якщо {@code other} є {@code null}
+     */
+    public Book(Book other) {
+        if (other == null) {
+            throw new InvalidBookDataException("Source book for copying cannot be null.");
+        }
+        this.title      = other.title;
+        this.author     = other.author;
+        this.year       = other.year;
+        this.price      = other.price;
+        this.genre      = other.genre;
+        this.pages      = other.pages;
+        instanceCount++;
     }
 
     // ---------------------------------------------------------------
     // Геттери та сетери
     // ---------------------------------------------------------------
+
+    /**
+     * Повертає загальну кількість об'єктів {@code Book},
+     * створених за весь час роботи програми.
+     *
+     * @return кількість створених екземплярів (≥ 0)
+     */
+    public static int getInstanceCount() {
+        return instanceCount;
+    }
 
     /**
      * Повертає назву книги.
@@ -154,19 +220,19 @@ public class Book {
      *
      * @return жанр книги
      */
-    public String getGenre() { return genre; }
+    public Genre getGenre() { return genre; }
 
     /**
      * Встановлює жанр книги.
      *
-     * @param genre жанр книги; не може бути {@code null} або порожнім рядком
-     * @throws InvalidBookDataException якщо {@code genre} порожній або {@code null}
+     * @param genre жанр; не може бути {@code null}
+     * @throws InvalidBookDataException якщо значення {@code null}
      */
-    public void setGenre(String genre) {
-        if (genre == null || genre.isBlank()) {
+    public void setGenre(Genre genre) {
+        if (genre == null) {
             throw new InvalidBookDataException("Genre cannot be empty.");
         }
-        this.genre = genre.trim();
+        this.genre = genre;
     }
 
     /**
