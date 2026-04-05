@@ -114,12 +114,52 @@ public class Main {
     // Пункт 2 — Додавання EBook
     // ---------------------------------------------------------------
 
-    private static void addEBook() {}
+    private static void addEBook() {
+        System.out.println("\n--- Add EBook ---");
+        try {
+            String title        = readNonEmptyString("Title:    ");
+            String author       = readNonEmptyString("Author:   ");
+            int    year         = readInt("Year:     ");
+            double price        = readDouble("Price:    ");
+            Genre  genre        = readGenre();
+            int    pages        = readInt("Pages:   ");
+            String fileFormat   = readNonEmptyString("File format (e.g. EPUB, PDF): ");
+            double fileSizeMB   = readDouble("File size (MB):   ");
+            String downloadUrl  = readNonEmptyString("Download URL: ");
+
+            books.add(new EBook(title, author, year, price, genre, pages,
+                    fileFormat, fileSizeMB, downloadUrl));
+            System.out.println("  [OK] EBook added.\n");
+
+        } catch (InvalidBookDataException e) {
+            System.out.println("  [!] " + e.getMessage() + "\n");
+        }
+    }
 
     // ---------------------------------------------------------------
     // Пункт 3 — Додавання PaperBook
     // ---------------------------------------------------------------
-    private static void addPaperBook() {}
+    private static void addPaperBook() {
+        System.out.println("\n--- Add PaperBook ---");
+        try {
+            String title       = readNonEmptyString("Title:     ");
+            String author      = readNonEmptyString("Author:    ");
+            int    year        = readInt("Year:      ");
+            double price       = readDouble("Price:     ");
+            Genre  genre       = readGenre();
+            int    pages       = readInt("Pages:    ");
+            String publisher   = readNonEmptyString("Publisher: ");
+            int    edition     = readInt("Edition:  ");
+            double weightGrams = readDouble("Weight (g):    ");
+
+            books.add(new PaperBook(title, author, year, price, genre, pages,
+                    publisher, edition, weightGrams));
+            System.out.println("  [OK] PaperBook added.\n");
+
+        } catch (InvalidBookDataException e) {
+            System.out.println("  [!] " + e.getMessage() + "\n");
+        }
+    }
 
     // ---------------------------------------------------------------
     // Пункт 4: Виведення всіх книг
@@ -135,9 +175,10 @@ public class Main {
             System.out.println("  (no books added yet)\n");
             return;
         }
+
         for (int i = 0; i < books.size(); i++) {
-            Book book = books.get(i);
-            System.out.println("  " + (i + 1) + ". " + book);
+            Book book = books.get(i);   // посилання базового типу
+            System.out.println("  " + (i + 1) + ". " + book);  // toString() — поліморфний виклик
         }
         System.out.println();
     }
@@ -213,7 +254,18 @@ public class Main {
     }
 
     private static Genre readGenre() {
-        return null;
+        Genre[] values = Genre.values();
+        System.out.println("  Select Genre:");
+        for (int i = 0; i < values.length; i++) {
+            System.out.println("    " + (i + 1) + ". " + values[i]);
+        }
+        while (true) {
+            int choice = readInt("  Genre [1-" + values.length + "]: ");
+            if (choice >= 1 && choice <= values.length) {
+                return values[choice - 1];
+            }
+            System.out.println("  [!] Enter a number from 1 to " + values.length + ".");
+        }
     }
 
 }
