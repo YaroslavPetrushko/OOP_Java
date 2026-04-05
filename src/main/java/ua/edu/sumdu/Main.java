@@ -1,5 +1,6 @@
 package ua.edu.sumdu;
 
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -16,6 +17,9 @@ import java.util.Scanner;
  */
 public class Main {
 
+    /** Єдина колекція для об'єктів усіх типів ієрархії. */
+    private static final ArrayList<Book> books = new ArrayList<>();
+
     /** Спільний Scanner для всієї програми. */
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -27,46 +31,25 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("=== Book Manager ===");
 
-        Library library = initLibrary();
-        System.out.println(" * Library \"" + library.getName() + "\" created.\n");
-
         boolean running = true;
         while (running) {
             printMenu();
             int choice = readMenuChoice();
 
             switch (choice) {
-                case 1 -> addBook(library);
-                case 2 -> printAllBooks(library);
-                case 3 -> copyBook(library);
-                case 4 -> removeBook(library);
-                case 5 -> showInstanceCount();
-                case 6 -> {
+                case 1 -> addBook();
+                case 2 -> addEBook();
+                case 3 -> addPaperBook();
+                case 4 -> printAllBooks();
+                case 5 -> {
                     System.out.println("Goodbye!");
                     running = false;
                 }
-                default -> System.out.println("  [!] Unknown option. Please enter a number from 1 to 6.\n");
+                default -> System.out.println("  [!] Please enter a number from 1 to 5.\n");
             }
         }
 
         scanner.close();
-    }
-
-    // ---------------------------------------------------------------
-    // Ініціалізація бібліотеки
-    // ---------------------------------------------------------------
-
-    private static Library initLibrary() {
-        System.out.println("\n--- Library Setup ---");
-        while (true) {
-            try {
-                String name     = readNonEmptyString("Library name:    ");
-                String address  = readNonEmptyString("Library address: ");
-                return new Library(name, address);
-            } catch (InvalidBookDataException e) {
-                System.out.println("  [!] " + e.getMessage() + "\n");
-            }
-        }
     }
 
     // ---------------------------------------------------------------
@@ -79,11 +62,10 @@ public class Main {
     private static void printMenu() {
         System.out.println("--------------------");
         System.out.println("1. Add new book");
-        System.out.println("2. Show all books");
-        System.out.println("3. Copy book (copy constructor)");
-        System.out.println("4. Remove book");
-        System.out.println("5. Show total Book instances created");
-        System.out.println("6. Exit");
+        System.out.println("2. Add EBook");
+        System.out.println("3. Add PaperBook");
+        System.out.println("4. Show all books");
+        System.out.println("5. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -110,20 +92,18 @@ public class Main {
      * Інтерактивно зчитує дані нової книги та додає її до списку.
      * При будь-якій помилці введення виводить повідомлення і повертається до меню.
      */
-    private static void addBook(Library library) {
+    private static void addBook() {
         System.out.println("\n--- Add new Book ---");
         try {
             String title    = readNonEmptyString("Title:  ");
             String author   = readNonEmptyString("Author: ");
             int    year     = readInt("Year:   ");
             double price    = readDouble("Price:  ");
-            Genre genre     = readEnum("Genre",Genre.values());
+            Genre genre     = readGenre();
             int    pages    = readInt("Pages:  ");
 
-            Book book = new Book(title, author, year, price, genre, pages);
-            library.addBook(book);
-            System.out.println("  [OK] Book added successfully. Total Book objects ever created: "
-                    + Book.getInstanceCount() + "\n");
+            books.add(new Book(title, author, year, price, genre, pages));
+            System.out.println("  [OK] Book added successfully.\n");
 
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] Validation error: " + e.getMessage() + "\n");
@@ -131,96 +111,40 @@ public class Main {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 2: Виведення всіх книг
+    // Пункт 2 — Додавання EBook
+    // ---------------------------------------------------------------
+
+    private static void addEBook() {}
+
+    // ---------------------------------------------------------------
+    // Пункт 3 — Додавання PaperBook
+    // ---------------------------------------------------------------
+    private static void addPaperBook() {}
+
+    // ---------------------------------------------------------------
+    // Пункт 4: Виведення всіх книг
     // ---------------------------------------------------------------
 
     /**
      * Виводить усі збережені книги у форматованому вигляді.
      * Якщо список порожній — повідомляє про це.
      */
-    private static void printAllBooks(Library library) {
+    private static void printAllBooks() {
         System.out.println("\n--- Book List ---");
-        if (library.getBookCount() == 0) {
-            System.out.println("  (library is empty - no books added yet)\n");
+        if (books.isEmpty()) {
+            System.out.println("  (no books added yet)\n");
             return;
         }
-        System.out.println("Total number of books: " + Book.getInstanceCount()+"\n");
-        System.out.println(library);
-        System.out.println();
-    }
-
-    // ---------------------------------------------------------------
-    // Пункт 3: Копіювання книги
-    // ---------------------------------------------------------------
-
-    private static void copyBook(Library library) {
-        System.out.println("\n--- Copy Book ---");
-        if (library.getBookCount() == 0) {
-            System.out.println("  (library is empty - add book first!)\n");
-            return;
+        for (int i = 0; i < books.size(); i++) {
+            Book book = books.get(i);
+            System.out.println("  " + (i + 1) + ". " + book);
         }
-        printNumberedList(library);
-
-        try {
-            int index = readInt("Book number to copy: ") - 1;
-            Book original   = library.getBook(index);
-            Book copy       = new Book(original);          // використовуємо конструктор копіювання
-            library.addBook(copy);
-            System.out.println("  [OK] Copy created: " + copy);
-            System.out.println("  Total Book objects ever created: "
-                    + Book.getInstanceCount() + "\n");
-        } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
-        }
-    }
-
-    // ---------------------------------------------------------------
-    // Пункт 4: Видалення книги
-    // ---------------------------------------------------------------
-
-    private static void removeBook(Library library) {
-        System.out.println("\n--- Remove Book ---");
-        if (library.getBookCount() == 0) {
-            System.out.println("  (library is empty)\n");
-            return;
-        }
-        printNumberedList(library);
-
-        try {
-            int index = readInt("Book number to remove: ") - 1;
-            library.removeBook(index);
-            System.out.println("  [OK] Book removed.\n");
-        } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
-        }
-    }
-
-    // ---------------------------------------------------------------
-    // Пункт 5: Статичний лічильник
-    // ---------------------------------------------------------------
-
-    private static void showInstanceCount() {
-        System.out.println("\n--- Static Counter ---");
-        System.out.println("  Total Book objects created (including copies): "
-                + Book.getInstanceCount());
-        System.out.println("  Books currently in library: "
-                + "see list");
         System.out.println();
     }
 
     // ---------------------------------------------------------------
     // Допоміжні методи зчитування
     // ---------------------------------------------------------------
-
-    /**
-     * Виводить список книг.
-     */
-    private static void printNumberedList(Library library) {
-        for (int i = 0; i < library.getBookCount(); i++) {
-            System.out.println("  " + (i + 1) + ". " + library.getBook(i).getTitle()
-                    + " / " + library.getBook(i).getAuthor());
-        }
-    }
 
     /**
      * Зчитує непорожній рядок із клавіатури.
@@ -288,19 +212,8 @@ public class Main {
         }
     }
 
-    // Відображає меню вибору жанру та повертає обране значення enum
-    private static <T extends Enum<T>> T readEnum(String label, T[] values) {
-        System.out.println("  Select " + label + ":");
-        for (int i = 0; i < values.length; i++) {
-            System.out.println("    " + (i + 1) + ". " + values[i]);
-        }
-        while (true) {
-            int choice = readInt("  " + label + " [1-" + values.length + "]: ");
-            if (choice >= 1 && choice <= values.length) {
-                return values[choice - 1];
-            }
-            System.out.println("  [!] Enter a number from 1 to " + values.length + ".");
-        }
+    private static Genre readGenre() {
+        return null;
     }
 
 }
