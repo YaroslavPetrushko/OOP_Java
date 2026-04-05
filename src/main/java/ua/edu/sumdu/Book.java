@@ -240,14 +240,9 @@ public class Book {
      */
     @Override
     public String toString() {
-        return "Book{" +
-                "title='" + title + '\'' +
-                ", author='" + author + '\'' +
-                ", year=" + year +
-                ", price=" + price +
-                ", genre='" + genre + '\'' +
-                ", pages=" + pages +
-                '}';
+        return String.format(
+                "[Book] \"%s\" by %s | %d | $%.2f | %s | %d pages",
+                title, author, year, price, genre, pages);
     }
 
     /**
