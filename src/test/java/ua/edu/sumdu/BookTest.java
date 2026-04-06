@@ -1,289 +1,266 @@
 package ua.edu.sumdu;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Автотести для класів {@link Book} та {@link Library}.
+ * Автотести для класів {@link Book}, {@link EBook} та {@link PaperBook}
  *
  * <p>Покривають:</p>
  * <ul>
- *   <li>основний конструктор ({@link Book#Book(String, String, int, double, Genre, int)})</li>
- *   <li>конструктор копіювання ({@link Book#Book(Book)})</li>
- *   <li>статичний лічильник ({@link Book#getInstanceCount()})</li>
- *   <li>валідацію сетерів;</li>
- *   <li>агрегацію через {@link Library}.</li>
+ *   <li>валідацію конструкторів і сетерів базового класу;</li>
+ *   <li>специфічну валідацію підкласів;</li>
+ *   <li>конструктор копіювання для кожного класу;</li>
+ *   <li>поліморфний вивід через {@code ArrayList<Book>};</li>
+ *   <li>перевірку instanceof для коректності типів у колекції.</li>
  * </ul>
  */
 class BookTest {
 
-    /** Коректний об'єкт, що переініціалізується перед кожним тестом. */
-    private Book validBook;
-
-    /**
-     * Ініціалізує валідний об'єкт {@link Book} перед кожним тестом.
-     */
-    @BeforeEach
-    void setUp() {
-        validBook = new Book("Clean Code", "Robert C. Martin",
+    /** Повертає коректний об'єкт {@link Book}. */
+    private Book validBook() {
+        return new Book("Clean Code", "Robert C. Martin",
                 2008, 39.99, Genre.PROGRAMMING, 431);
     }
 
-    // ---------------------------------------------------------------
-    // Основний конструктор
-    // ---------------------------------------------------------------
-
-    /**
-     * Конструктор повинен коректно зберігати всі передані значення.
-     */
-    @Test
-    void constructor_validData_storesAllFields() {
-        assertEquals("Clean Code",          validBook.getTitle());
-        assertEquals("Robert C. Martin",    validBook.getAuthor());
-        assertEquals(2008,                  validBook.getYear());
-        assertEquals(39.99, validBook.getPrice(), 0.001);
-        assertEquals(Genre.PROGRAMMING,     validBook.getGenre());
-        assertEquals(431,                   validBook.getPages());
+    /** Повертає коректний об'єкт {@link EBook}. */
+    private EBook validEBook() {
+        return new EBook("The Pragmatic Programmer", "David Thomas",
+                2019, 29.99, Genre.PROGRAMMING, 352,
+                "EPUB", 4.5, "https://example.com/pragmatic.epub");
     }
 
-    /**
-     * Порожня назва у конструкторі — {@link InvalidBookDataException}.
-     */
-    @Test
-    void constructor_emptyTitle_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                new Book("", "Author", 2020, 10.0,
-                        Genre.FICTION, 200));
-    }
-
-    /**
-     * {@code null}-автор у конструкторі — {@link InvalidBookDataException}.
-     */
-    @Test
-    void constructor_nullAuthor_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                new Book("Title", null, 2020, 10.0,
-                        Genre.FICTION, 200));
-    }
-
-    /**
-     * Від'ємна ціна у конструкторі — {@link InvalidBookDataException}.
-     */
-    @Test
-    void constructor_negativePrice_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                new Book("Title", "Author", 2020, -1.0,
-                        Genre.FICTION, 200));
-    }
-
-    /**
-     * Нульова кількість сторінок — {@link InvalidBookDataException}.
-     */
-    @Test
-    void constructor_zeroPagesCount_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                new Book("Title", "Author", 2020, 10.0,
-                        Genre.FICTION, 0));
-    }
-
-    /**
-     * Майбутній рік (+100 років) — {@link InvalidBookDataException}.
-     */
-    @Test
-    void constructor_futureYear_throwsException() {
-        int futureYear = java.time.Year.now().getValue() + 100;
-        assertThrows(InvalidBookDataException.class, () ->
-                new Book("Title", "Author", futureYear, 10.0,
-                        Genre.SCI_FI, 100));
-    }
-
-    /**
-     * {@code null} жанр у конструкторі — {@link InvalidBookDataException}.
-     */
-    @Test
-    void constructor_nullGenre_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                new Book("Title", "Author", 2020, 10.0,
-                        null, 200));
+    /** Повертає коректний об'єкт {@link PaperBook}. */
+    private PaperBook validPaperBook() {
+        return new PaperBook("Design Patterns", "GoF",
+                1994, 54.99, Genre.PROGRAMMING, 395,
+                "Addison-Wesley", 1, 730.0);
     }
 
     // ---------------------------------------------------------------
-    // Конструктор копіювання
+    // Book — базовий конструктор
     // ---------------------------------------------------------------
 
-    /**
-     * Копія повинна мати рівні значення всіх полів оригіналу.
-     */
     @Test
-    void copyConstructor_equalFields_afterCopy() {
-        Book copy = new Book(validBook);
-        assertEquals(validBook, copy);
+    void book_validData_storesAllFields() {
+        Book b = validBook();
+        assertEquals("Clean Code",       b.getTitle());
+        assertEquals("Robert C. Martin", b.getAuthor());
+        assertEquals(2008,               b.getYear());
+        assertEquals(39.99, b.getPrice(), 0.001);
+        assertEquals(Genre.PROGRAMMING,  b.getGenre());
+        assertEquals(431,                b.getPages());
     }
 
-    /**
-     * Копія повинна бути окремим об'єктом (не тим самим посиланням).
-     */
     @Test
-    void copyConstructor_differentReference_afterCopy() {
-        Book copy = new Book(validBook);
-        assertNotSame(validBook, copy);
+    void book_emptyTitle_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new Book("", "Author", 2000, 10.0, Genre.FICTION, 100));
     }
 
-    /**
-     * Зміна поля у копії не повинна впливати на оригінал.
-     */
     @Test
-    void copyConstructor_mutatingCopy_doesNotAffectOriginal() {
-        Book copy = new Book(validBook);
-        copy.setTitle("Modified Title");
-        assertEquals("Clean Code", validBook.getTitle());
+    void book_negativePrice_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new Book("Title", "Author", 2000, -1.0, Genre.FICTION, 100));
     }
 
-    /**
-     * Копіювання {@code null} — {@link InvalidBookDataException}.
-     */
     @Test
-    void copyConstructor_nullSource_throwsException() {
-        assertThrows(InvalidBookDataException.class, () -> new Book(null));
+    void book_zeroPagesCount_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new Book("Title", "Author", 2000, 10.0, Genre.FICTION, 0));
     }
 
-    // ---------------------------------------------------------------
-    // Статичний лічильник
-    // ---------------------------------------------------------------
-
-    /**
-     * Після створення N нових об'єктів лічильник повинен збільшитися рівно на N.
-     */
     @Test
-    void instanceCount_incrementsForEachNewObject() {
-        int before = Book.getInstanceCount();
-
-        new Book("A", "B", 2000, 5.0, Genre.MYSTERY, 100);
-        new Book("C", "D", 2001, 6.0, Genre.FANTASY, 200);
-
-        assertEquals(before + 2, Book.getInstanceCount());
+    void book_nullGenre_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new Book("Title", "Author", 2000, 10.0, null, 100));
     }
 
-    /**
-     * Конструктор копіювання теж повинен збільшувати лічильник.
-     */
     @Test
-    void instanceCount_incrementsForCopyConstructor() {
-        int before = Book.getInstanceCount();
-        new Book(validBook);
-        assertEquals(before + 1, Book.getInstanceCount());
+    void book_futureYear_throwsException() {
+        int futureYear = java.time.Year.now().getValue() + 10;
+        assertThrows(InvalidBookDataException.class, () ->
+                new Book("Title", "Author", futureYear, 10.0, Genre.FICTION, 100));
     }
 
     // ---------------------------------------------------------------
-    // Сетери — негативні кейси
+    // Book — сетери
     // ---------------------------------------------------------------
 
-    /**
-     * {@code setTitle} з рядком тільки з пробілів — {@link InvalidBookDataException}.
-     */
     @Test
-    void setTitle_blankString_throwsException() {
+    void setTitle_blank_throwsException() {
         assertThrows(InvalidBookDataException.class, () ->
-                validBook.setTitle("   "));
+                validBook().setTitle("   "));
     }
 
-    /**
-     * {@code setAuthor} з порожнім рядком — {@link InvalidBookDataException}.
-     */
     @Test
-    void setAuthor_emptyString_throwsException() {
+    void setPrice_negative_throwsException() {
         assertThrows(InvalidBookDataException.class, () ->
-                validBook.setAuthor(""));
+                validBook().setPrice(-0.01));
     }
 
-    /**
-     * {@code setYear} з нулем — {@link InvalidBookDataException}.
-     */
     @Test
-    void setYear_zeroValue_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                validBook.setYear(0));
+    void setPrice_zero_isAllowed() {
+        Book b = validBook();
+        assertDoesNotThrow(() -> b.setPrice(0.0));
+        assertEquals(0.0, b.getPrice(), 0.001);
     }
 
-    /**
-     * {@code setPrice} з від'ємним числом — {@link InvalidBookDataException}.
-     */
     @Test
-    void setPrice_negativeValue_throwsException() {
+    void setPages_negative_throwsException() {
         assertThrows(InvalidBookDataException.class, () ->
-                validBook.setPrice(-0.01));
-    }
-
-    /**
-     * {@code setPrice(0.0)} дозволено (безкоштовна книга).
-     */
-    @Test
-    void setPrice_zeroValue_isAllowed() {
-        assertDoesNotThrow(() -> validBook.setPrice(0.0));
-        assertEquals(0.0, validBook.getPrice(), 0.001);
-    }
-
-    /**
-     * {@code setPages} з від'ємним числом — {@link InvalidBookDataException}.
-     */
-    @Test
-    void setPages_negativeValue_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                validBook.setPages(-5));
-    }
-
-    /**
-     * {@code setGenre(null)} — {@link InvalidBookDataException}.
-     */
-    @Test
-    void setGenre_nullValue_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                validBook.setGenre(null));
+                validBook().setPages(-1));
     }
 
     // ---------------------------------------------------------------
-    // Агрегація: Library
+    // Book — конструктор копіювання
+    // ---------------------------------------------------------------
+
+    @Test
+    void book_copyConstructor_equalFields() {
+        Book original = validBook();
+        Book copy = new Book(original);
+        assertEquals(original, copy);
+        assertNotSame(original, copy);
+    }
+
+    @Test
+    void book_copyConstructor_mutatingCopy_doesNotAffectOriginal() {
+        Book original = validBook();
+        Book copy = new Book(original);
+        copy.setTitle("Other Title");
+        assertEquals("Clean Code", original.getTitle());
+    }
+
+    @Test
+    void book_copyConstructor_null_throwsException() {
+        assertThrows(InvalidBookDataException.class, () -> new Book((Book) null));
+    }
+
+    // ---------------------------------------------------------------
+    // EBook — конструктор та валідація
+    // ---------------------------------------------------------------
+
+    @Test
+    void eBook_validData_storesExtraFields() {
+        EBook e = validEBook();
+        assertEquals("EPUB", e.getFileFormat());
+        assertEquals(4.5,    e.getFileSizeMB(), 0.001);
+        assertEquals("https://example.com/pragmatic.epub", e.getDownloadUrl());
+    }
+
+    @Test
+    void eBook_emptyFileFormat_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new EBook("T", "A", 2020, 5.0, Genre.FICTION, 100,
+                        "", 2.0, "https://x.com"));
+    }
+
+    @Test
+    void eBook_zeroFileSize_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new EBook("T", "A", 2020, 5.0, Genre.FICTION, 100,
+                        "PDF", 0.0, "https://x.com"));
+    }
+
+    @Test
+    void eBook_emptyDownloadUrl_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new EBook("T", "A", 2020, 5.0, Genre.FICTION, 100,
+                        "PDF", 2.0, ""));
+    }
+
+    @Test
+    void eBook_copyConstructor_equalAndIndependent() {
+        EBook original = validEBook();
+        EBook copy = new EBook(original);
+        assertEquals(original, copy);
+        assertNotSame(original, copy);
+        copy.setFileFormat("MOBI");
+        assertEquals("EPUB", original.getFileFormat());
+    }
+
+    // ---------------------------------------------------------------
+    // PaperBook — конструктор та валідація
+    // ---------------------------------------------------------------
+
+    @Test
+    void paperBook_validData_storesExtraFields() {
+        PaperBook pb = validPaperBook();
+        assertEquals("Addison-Wesley", pb.getPublisher());
+        assertEquals(1,     pb.getEdition());
+        assertEquals(730.0, pb.getWeightGrams(), 0.001);
+    }
+
+    @Test
+    void paperBook_emptyPublisher_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new PaperBook("T", "A", 2000, 10.0, Genre.FICTION, 100,
+                        "", 1, 300.0));
+    }
+
+    @Test
+    void paperBook_zeroEdition_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new PaperBook("T", "A", 2000, 10.0, Genre.FICTION, 100,
+                        "Publisher", 0, 300.0));
+    }
+
+    @Test
+    void paperBook_negativeWeight_throwsException() {
+        assertThrows(InvalidBookDataException.class, () ->
+                new PaperBook("T", "A", 2000, 10.0, Genre.FICTION, 100,
+                        "Publisher", 1, -50.0));
+    }
+
+    @Test
+    void paperBook_copyConstructor_equalAndIndependent() {
+        PaperBook original = validPaperBook();
+        PaperBook copy = new PaperBook(original);
+        assertEquals(original, copy);
+        assertNotSame(original, copy);
+        copy.setPublisher("Other Publisher");
+        assertEquals("Addison-Wesley", original.getPublisher());
+    }
+
+    // ---------------------------------------------------------------
+    // Поліморфізм — ArrayList<Book>
     // ---------------------------------------------------------------
 
     /**
-     * Додавання книги до бібліотеки збільшує лічильник книг на 1.
+     * Перевіряє, що об'єкти всіх трьох типів можна зберігати
+     * в одній колекції {@code ArrayList<Book>} та отримувати через
+     * посилання базового типу.
      */
     @Test
-    void library_addBook_increasesCount() {
-        Library library = new Library("Test Library", "Test St. 1");
-        assertEquals(0, library.getBookCount());
-        library.addBook(validBook);
-        assertEquals(1, library.getBookCount());
+    void polymorphism_allTypesInOneCollection() {
+        ArrayList<Book> list = new ArrayList<>();
+        list.add(validBook());
+        list.add(validEBook());
+        list.add(validPaperBook());
+
+        assertEquals(3, list.size());
+        assertInstanceOf(Book.class,      list.get(0));
+        assertInstanceOf(EBook.class,     list.get(1));
+        assertInstanceOf(PaperBook.class, list.get(2));
     }
 
     /**
-     * Видалення книги з бібліотеки зменшує лічильник на 1.
+     * Перевіряє, що {@code toString()} викликається відповідно до реального
+     * типу об'єкта (динамічна диспетчеризація).
      */
     @Test
-    void library_removeBook_decreasesCount() {
-        Library library = new Library("Test Library", "Test St. 1");
-        library.addBook(validBook);
-        library.removeBook(0);
-        assertEquals(0, library.getBookCount());
-    }
+    void polymorphism_toStringDispatchedByRealType() {
+        ArrayList<Book> list = new ArrayList<>();
+        list.add(validBook());
+        list.add(validEBook());
+        list.add(validPaperBook());
 
-    /**
-     * Спроба отримати книгу за некоректним індексом — {@link InvalidBookDataException}.
-     */
-    @Test
-    void library_getBook_invalidIndex_throwsException() {
-        Library library = new Library("Test Library", "Test St. 1");
-        assertThrows(InvalidBookDataException.class, () -> library.getBook(0));
-    }
-
-    /**
-     * Порожня назва бібліотеки у конструкторі — {@link InvalidBookDataException}.
-     */
-    @Test
-    void library_emptyName_throwsException() {
-        assertThrows(InvalidBookDataException.class, () ->
-                new Library("", "Address"));
+        assertTrue(list.get(0).toString().startsWith("[Book]"));
+        assertTrue(list.get(1).toString().startsWith("[EBook]"));
+        assertTrue(list.get(2).toString().startsWith("[PaperBook]"));
     }
 }
