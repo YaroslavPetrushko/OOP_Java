@@ -6,10 +6,23 @@ import java.util.Scanner;
 /**
  * Точка входу в програму "Book Manager".
  *
- * <p>Реалізує консольне меню з трьома пунктами:</p>
+ * <p>Підтримує ієрархію з п'яти класів:</p>
+ * <pre>
+ * Book
+ * ├── EBook
+ * ├── AudioBook
+ * └── PaperBook
+ *     └── RareBook
+ * </pre>
+ *
+ * <p>Усі створені об'єкти зберігаються в одній колекції
+ * {@code ArrayList<Book>}, яка на початку роботи порожня.
+ * Файли для зберігання чи завантаження не використовуються.</p>
+ *
+ * <p>Головне меню:</p>
  * <ol>
- *   <li>Створити новий об'єкт {@link Book}</li>
- *   <li>Вивести інформацію про всі збережені об'єкти</li>
+ *   <li>Створити новий об'єкт → підменю вибору типу → введення даних</li>
+ *   <li>Вивести інформацію про всі об'єкти</li>
  *   <li>Завершити роботу</li>
  * </ol>
  * <p>Усі помилки введення (нечислові дані, порожні рядки, некоректні значення)
@@ -83,13 +96,19 @@ public class Main {
     // ---------------------------------------------------------------
     // Пункт 1: Створення нової книги
     // ---------------------------------------------------------------
+
+    /**
+     * Показує підменю вибору типу об'єкта та делегує до відповідного
+     * методу створення. Пункт «0» дозволяє повернутись до головного
+     * меню без створення об'єкта.
+     */
     private static void createObject() {
         System.out.println("\n--- Select type ---");
         System.out.println("  1. Book (base)");
         System.out.println("  2. EBook");
-        System.out.println("  3. AudioBook");
-        System.out.println("  4. PaperBook");
-        System.out.println("  5. RareBook");
+        System.out.println("  3. Audio Book");
+        System.out.println("  4. Paper Book");
+        System.out.println("  5. Rare Book");
         System.out.println("  0. Back to main menu");
         System.out.print("Type: ");
 
@@ -107,9 +126,12 @@ public class Main {
         }
     }
 
-    // Методи створення книг
+    // ---------------------------------------------------------------
+    // Методи створення конкретних книг
+    // ---------------------------------------------------------------
+
     /**
-     * Інтерактивно зчитує дані нової книги та додає її до списку.
+     * Зчитує дані для базової {@link Book} та додає її до колекції.
      * При будь-якій помилці введення виводить повідомлення і повертається до меню.
      */
     private static void createBook() {
@@ -123,13 +145,16 @@ public class Main {
             int    pages    = readInt("Pages:  ");
 
             books.add(new Book(title, author, year, price, genre, pages));
-            System.out.println("  [OK] Book added successfully.\n");
+            System.out.println("  [OK] Book added. Total in collection: " + books.size() + "\n");
 
         } catch (InvalidBookDataException e) {
-            System.out.println("  [!] Validation error: " + e.getMessage() + "\n");
+            System.out.println("  [!] " + e.getMessage() + "\n");
         }
     }
 
+    /**
+     * Зчитує дані для {@link EBook} та додає її до колекції.
+     */
     private static void createEBook() {
         System.out.println("--- Add EBook ---");
         try {
@@ -145,13 +170,16 @@ public class Main {
 
             books.add(new EBook(title, author, year, price, genre, pages,
                     fileFormat, fileSizeMB, downloadUrl));
-            System.out.println("  [OK] EBook added.\n");
+            System.out.println("  [OK] EBook added. Total in collection: " + books.size() + "\n");
 
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
         }
     }
 
+    /**
+     * Зчитує дані для {@link AudioBook} та додає її до колекції.
+     */
     private static void createAudioBook() {
         System.out.println("--- Add AudioBook ---");
         try {
@@ -167,12 +195,15 @@ public class Main {
 
             books.add(new AudioBook(title, author, year, price, genre, pages,
                     narrator, durationMinutes, audioFormat));
-            System.out.println("  [OK] AudioBook added.\n");
+            System.out.println("  [OK] AudioBook added. Total in collection: " + books.size() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
         }
     }
 
+    /**
+     * Зчитує дані для {@link PaperBook} та додає її до колекції.
+     */
     private static void createPaperBook() {
         System.out.println("--- Add PaperBook ---");
         try {
@@ -188,13 +219,15 @@ public class Main {
 
             books.add(new PaperBook(title, author, year, price, genre, pages,
                     publisher, edition, weightGrams));
-            System.out.println("  [OK] PaperBook added.\n");
-
+            System.out.println("  [OK] PaperBook added. Total in collection: " + books.size() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
         }
     }
 
+    /**
+     * Зчитує дані для {@link RareBook} та додає її до колекції.
+     */
     private static void createRareBook() {
         System.out.println("--- Add RareBook ---");
         try {
@@ -214,27 +247,30 @@ public class Main {
             books.add(new RareBook(title, author, year, price, genre, pages,
                     publisher, edition, weightGrams,
                     condition, estimatedValueUSD, acquisitionYear));
-            System.out.println("  [OK] RareBook added.\n");
+            System.out.println("  [OK] RareBook added. Total in collection: " + books.size() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
         }
     }
 
     // ---------------------------------------------------------------
-    // Пункт 3: Виведення всіх книг
+    // Пункт 2: Виведення всіх книг
     // ---------------------------------------------------------------
 
     /**
-     * Виводить усі збережені книги у форматованому вигляді.
+     * Виводить усі об'єкти колекції через посилання базового типу {@link Book}.
+     *
+     * <p>Демонстрація поліморфізму: метод {@code toString()} викликається
+     * відповідно до реального типу кожного об'єкта.</p>
      * Якщо список порожній — повідомляє про це.
      */
     private static void printAllBooks() {
         System.out.println("\n--- Book List ---");
+        System.out.println("\n--- All objects [" + books.size() + "] ---");
         if (books.isEmpty()) {
-            System.out.println("  (no books added yet)\n");
+            System.out.println("  (collection is empty)\n");
             return;
         }
-
         for (int i = 0; i < books.size(); i++) {
             Book book = books.get(i);   // посилання базового типу
             System.out.println("  " + (i + 1) + ". " + book);  // toString() — поліморфний виклик
@@ -251,7 +287,7 @@ public class Main {
      * Повторює запит доти, доки користувач не введе хоча б один непробільний символ.
      *
      * @param prompt текст підказки, що виводиться перед полем введення
-     * @return непорожній рядок (після trim)
+     * @return непорожній рядок після {@code trim()}
      */
     private static String readNonEmptyString(String prompt) {
         while (true) {
@@ -288,9 +324,7 @@ public class Main {
     }
 
     /**
-     * Зчитує число з плаваючою крапкою з клавіатури.
-     * Приймає як крапку, так і кому як роздільник.
-     * Повторює запит при некоректному введенні.
+     * Зчитує дійсне число. Підтримує крапку і кому як роздільник.
      *
      * @param prompt текст підказки
      * @return введене дійсне число
@@ -312,6 +346,14 @@ public class Main {
         }
     }
 
+    /**
+     * Відображає нумерований список констант enum і повертає обрану.
+     *
+     * @param <T>    тип enum
+     * @param values масив констант ({@code SomeEnum.values()})
+     * @param label  назва поля для підказки
+     * @return обрана константа
+     */
     private static <T extends Enum<T>> T readEnum(T[] values, String label) {
         System.out.println("  " + label + ":");
         for (int i = 0; i < values.length; i++) {

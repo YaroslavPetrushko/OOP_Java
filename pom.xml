@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ua.edu.sumdu</groupId>
-    <artifactId>pr7</artifactId>
+    <artifactId>pr8</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -36,7 +36,10 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.12.0</version>
                 <configuration>
-                    <source>1.8</source>
+                    <source>25</source>
+                    <encoding>UTF-8</encoding>
+                    <doclint>none</doclint>
+                    <javadocDirectory>docs</javadocDirectory>
                 </configuration>
             </plugin>
         </plugins>
