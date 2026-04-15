@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
- * Точка входу в програму.
+ * Точка входу в програму "Book Manager".
  *
  * <p>Реалізує консольне меню з трьома пунктами:</p>
  * <ol>
@@ -17,7 +17,7 @@ import java.util.Scanner;
  */
 public class Main {
 
-    /** Єдина колекція для об'єктів усіх типів ієрархії. */
+    /** Єдина колекція для об'єктів усіх типів ієрархії. Порожня на старті. */
     private static final ArrayList<Book> books = new ArrayList<>();
 
     /** Спільний Scanner для всієї програми. */
@@ -37,15 +37,13 @@ public class Main {
             int choice = readMenuChoice();
 
             switch (choice) {
-                case 1 -> addBook();
-                case 2 -> addEBook();
-                case 3 -> addPaperBook();
-                case 4 -> printAllBooks();
-                case 5 -> {
+                case 1 -> createObject();
+                case 2 -> printAllBooks();
+                case 3 -> {
                     System.out.println("Goodbye!");
                     running = false;
                 }
-                default -> System.out.println("  [!] Please enter a number from 1 to 5.\n");
+                default -> System.out.println("  [!] Please enter 1, 2 or 3.\n");
             }
         }
 
@@ -61,11 +59,9 @@ public class Main {
      */
     private static void printMenu() {
         System.out.println("--------------------");
-        System.out.println("1. Add new book");
-        System.out.println("2. Add EBook");
-        System.out.println("3. Add PaperBook");
-        System.out.println("4. Show all books");
-        System.out.println("5. Exit");
+        System.out.println("1. Create new book");
+        System.out.println("2. Show all books");
+        System.out.println("3. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -85,21 +81,45 @@ public class Main {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 1: Додавання книги
+    // Пункт 1: Створення нової книги
     // ---------------------------------------------------------------
+    private static void createObject() {
+        System.out.println("\n--- Select type ---");
+        System.out.println("  1. Book (base)");
+        System.out.println("  2. EBook");
+        System.out.println("  3. AudioBook");
+        System.out.println("  4. PaperBook");
+        System.out.println("  5. RareBook");
+        System.out.println("  0. Back to main menu");
+        System.out.print("Type: ");
 
+        int type = readMenuChoice();
+        System.out.println();
+
+        switch (type) {
+            case 1 -> createBook();
+            case 2 -> createEBook();
+            case 3 -> createAudioBook();
+            case 4 -> createPaperBook();
+            case 5 -> createRareBook();
+            case 0 -> System.out.println("  Cancelled.\n");
+            default -> System.out.println("  [!] Unknown type. Returning to main menu.\n");
+        }
+    }
+
+    // Методи створення книг
     /**
      * Інтерактивно зчитує дані нової книги та додає її до списку.
      * При будь-якій помилці введення виводить повідомлення і повертається до меню.
      */
-    private static void addBook() {
-        System.out.println("\n--- Add new Book ---");
+    private static void createBook() {
+        System.out.println("--- Add new Book ---");
         try {
             String title    = readNonEmptyString("Title:  ");
             String author   = readNonEmptyString("Author: ");
             int    year     = readInt("Year:   ");
             double price    = readDouble("Price:  ");
-            Genre genre     = readGenre();
+            Genre genre     = readEnum(Genre.values(), "Genre");
             int    pages    = readInt("Pages:  ");
 
             books.add(new Book(title, author, year, price, genre, pages));
@@ -110,18 +130,14 @@ public class Main {
         }
     }
 
-    // ---------------------------------------------------------------
-    // Пункт 2 — Додавання EBook
-    // ---------------------------------------------------------------
-
-    private static void addEBook() {
-        System.out.println("\n--- Add EBook ---");
+    private static void createEBook() {
+        System.out.println("--- Add EBook ---");
         try {
             String title        = readNonEmptyString("Title:    ");
             String author       = readNonEmptyString("Author:   ");
             int    year         = readInt("Year:     ");
             double price        = readDouble("Price:    ");
-            Genre  genre        = readGenre();
+            Genre  genre        = readEnum(Genre.values(),"Genre");
             int    pages        = readInt("Pages:   ");
             String fileFormat   = readNonEmptyString("File format (e.g. EPUB, PDF): ");
             double fileSizeMB   = readDouble("File size (MB):   ");
@@ -136,21 +152,39 @@ public class Main {
         }
     }
 
-    // ---------------------------------------------------------------
-    // Пункт 3 — Додавання PaperBook
-    // ---------------------------------------------------------------
-    private static void addPaperBook() {
-        System.out.println("\n--- Add PaperBook ---");
+    private static void createAudioBook() {
+        System.out.println("--- Add AudioBook ---");
+        try {
+            String title            = readNonEmptyString("Title:    ");
+            String author           = readNonEmptyString("Author:   ");
+            int    year             = readInt("Year:     ");
+            double price            = readDouble("Price:    ");
+            Genre  genre            = readEnum(Genre.values(), "Genre");
+            int    pages            = readInt("Pages (original):    ");
+            String narrator         = readNonEmptyString("Narrator:     ");
+            int    durationMinutes  = readInt("Duration (minutes):  ");
+            String audioFormat      = readNonEmptyString("Audio format (e.g. MP3, AAC, FLAC): ");
+
+            books.add(new AudioBook(title, author, year, price, genre, pages,
+                    narrator, durationMinutes, audioFormat));
+            System.out.println("  [OK] AudioBook added.\n");
+        } catch (InvalidBookDataException e) {
+            System.out.println("  [!] " + e.getMessage() + "\n");
+        }
+    }
+
+    private static void createPaperBook() {
+        System.out.println("--- Add PaperBook ---");
         try {
             String title       = readNonEmptyString("Title:     ");
             String author      = readNonEmptyString("Author:    ");
             int    year        = readInt("Year:      ");
             double price       = readDouble("Price:     ");
-            Genre  genre       = readGenre();
+            Genre  genre       = readEnum(Genre.values(), "Genre");
             int    pages       = readInt("Pages:    ");
-            String publisher   = readNonEmptyString("Publisher: ");
-            int    edition     = readInt("Edition:  ");
-            double weightGrams = readDouble("Weight (g):    ");
+            String publisher   = readNonEmptyString("Publisher:  ");
+            int    edition     = readInt("Edition:    ");
+            double weightGrams = readDouble("Weight (g): ");
 
             books.add(new PaperBook(title, author, year, price, genre, pages,
                     publisher, edition, weightGrams));
@@ -161,8 +195,33 @@ public class Main {
         }
     }
 
+    private static void createRareBook() {
+        System.out.println("--- Add RareBook ---");
+        try {
+            String        title             = readNonEmptyString("Title:    ");
+            String        author            = readNonEmptyString("Author:   ");
+            int           year              = readInt("Year:     ");
+            double        price             = readDouble("Price:    ");
+            Genre         genre             = readEnum(Genre.values(), "Genre:  ");
+            int           pages             = readInt("Pages:   ");
+            String        publisher         = readNonEmptyString("Publisher: ");
+            int           edition           = readInt("Edition:   ");
+            double        weightGrams       = readDouble("Weight (g): ");
+            BookCondition condition         = readEnum(BookCondition.values(), "Condition");
+            double        estimatedValueUSD = readDouble("Estimated value ($):  ");
+            int           acquisitionYear   = readInt("Acquisition year:     ");
+
+            books.add(new RareBook(title, author, year, price, genre, pages,
+                    publisher, edition, weightGrams,
+                    condition, estimatedValueUSD, acquisitionYear));
+            System.out.println("  [OK] RareBook added.\n");
+        } catch (InvalidBookDataException e) {
+            System.out.println("  [!] " + e.getMessage() + "\n");
+        }
+    }
+
     // ---------------------------------------------------------------
-    // Пункт 4: Виведення всіх книг
+    // Пункт 3: Виведення всіх книг
     // ---------------------------------------------------------------
 
     /**
@@ -253,14 +312,13 @@ public class Main {
         }
     }
 
-    private static Genre readGenre() {
-        Genre[] values = Genre.values();
-        System.out.println("  Select Genre:");
+    private static <T extends Enum<T>> T readEnum(T[] values, String label) {
+        System.out.println("  " + label + ":");
         for (int i = 0; i < values.length; i++) {
             System.out.println("    " + (i + 1) + ". " + values[i]);
         }
         while (true) {
-            int choice = readInt("  Genre [1-" + values.length + "]: ");
+            int choice = readInt("  " + label + " [1-" + values.length + "]: ");
             if (choice >= 1 && choice <= values.length) {
                 return values[choice - 1];
             }
