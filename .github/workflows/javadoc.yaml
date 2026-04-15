@@ -1,0 +1,36 @@
+name: Generate Javadoc
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '25'
+
+    - name: Build project
+      run: mvn clean compile
+
+    - name: Generate JavaDoc
+      run: mvn javadoc:javadoc
+
+    - name: Copy docs to deploy folder
+      run: |
+        mkdir public
+        cp -r target/site/apidocs/* public/
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
