@@ -10,17 +10,38 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * Реалізація BookStorage для текстового файлу.
+ * Реалізація {@link BookStorage} для текстового файлу у форматі pipe-delimited.
+ *
+ * <h2>Формат рядка (поля розділено символом {@code |}):</h2>
+ * <pre>
+ * BOOK|title|author|year|price|genre|pages
+ * EBOOK|title|author|year|price|genre|pages|fileFormat|fileSizeMB|downloadUrl
+ * AUDIOBOOK|title|author|year|price|genre|pages|narrator|durationMinutes|audioFormat
+ * PAPERBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams
+ * RAREBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams|condition|estimatedValueUSD|acquisitionYear
+ * </pre>
+ *
+ * <p>Рядки, що починаються з {@code #}, вважаються коментарями і пропускаються.
+ * Некоректні рядки пропускаються з виведенням попередження.</p>
+ *
+ * <p><b>Обмеження:</b> рядкові поля не повинні містити символ {@code |}.</p>
  */
 public class TxtBookStorage implements BookStorage {
 
+    /** Розділювач полів у рядку файлу. */
     private static final String DELIMITER = "\\|";
 
+    /** Розділювач при записі. */
     private static final String WRITE_DELIMITER = "|";
 
+    /** Шлях до файлу зберігання. */
     private final String filePath;
 
-    // Створює сховище, прив'язане до вказаного файлу
+    /**
+     * Створює сховище, прив'язане до вказаного файлу.
+     *
+     * @param filePath шлях до файлу {@code input.txt}
+     */
     public TxtBookStorage(String filePath) {
         this.filePath = filePath;
     }
@@ -29,7 +50,12 @@ public class TxtBookStorage implements BookStorage {
     // Завантаження
     // ---------------------------------------------------------------
 
-    // Зчитує книги з текстового файлу.
+    /**
+     * Зчитує книги з текстового файлу.
+     * Пропускає порожні рядки, коментарі та некоректні записи.
+     *
+     * @return колекція книг (порожня, якщо файл відсутній або пошкоджений)
+     */
     @Override
     public ArrayList<Book> load() {
         ArrayList<Book> books = new ArrayList<Book>();
@@ -50,7 +76,7 @@ public class TxtBookStorage implements BookStorage {
                     books.add(book);
                 }
             }
-            System.out.println("  [TXT] Loaded " + books.size() + " books from " + filePath);
+            System.out.println("  [TXT] Loaded " + books.size() + " book(s) from " + filePath);
         } catch (IOException e) {
             System.out.println("  [TXT] File not found or unreadable: " + filePath
                     + " — starting with empty collection.");
@@ -62,7 +88,14 @@ public class TxtBookStorage implements BookStorage {
         return books;
     }
 
-    // Розбирає один рядок файлу та повертає відповідний об'єкт
+    /**
+     * Розбирає один рядок файлу та повертає відповідний об'єкт {@link Book}.
+     * При помилці повертає {@code null} і виводить попередження.
+     *
+     * @param line       рядок файлу
+     * @param lineNumber номер рядка (для діагностики)
+     * @return об'єкт Book або {@code null} при помилці
+     */
     private Book parseLine(String line, int lineNumber) {
         String[] parts = line.split(DELIMITER, -1);
         if (parts.length < 1) {
@@ -93,7 +126,7 @@ public class TxtBookStorage implements BookStorage {
         }
     }
 
-    // Базовий Book
+    /** Розбирає базову книгу (7 полів: type + 6). */
     private Book parseBook(String[] p, int ln) {
         checkLength(p, 7, ln, "BOOK");
         return new Book(p[1].trim(), p[2].trim(),
@@ -101,7 +134,7 @@ public class TxtBookStorage implements BookStorage {
                 Genre.valueOf(p[5].trim()), parseInt(p[6], ln));
     }
 
-    // EBook
+    /** Розбирає EBook (10 полів). */
     private EBook parseEBook(String[] p, int ln) {
         checkLength(p, 10, ln, "EBOOK");
         return new EBook(p[1].trim(), p[2].trim(),
@@ -110,7 +143,7 @@ public class TxtBookStorage implements BookStorage {
                 p[7].trim(), parseDouble(p[8], ln), p[9].trim());
     }
 
-    // AudioBook
+    /** Розбирає AudioBook (10 полів). */
     private AudioBook parseAudioBook(String[] p, int ln) {
         checkLength(p, 10, ln, "AUDIOBOOK");
         return new AudioBook(p[1].trim(), p[2].trim(),
@@ -119,7 +152,7 @@ public class TxtBookStorage implements BookStorage {
                 p[7].trim(), parseInt(p[8], ln), p[9].trim());
     }
 
-    // PaperBook
+    /** Розбирає PaperBook (10 полів). */
     private PaperBook parsePaperBook(String[] p, int ln) {
         checkLength(p, 10, ln, "PAPERBOOK");
         return new PaperBook(p[1].trim(), p[2].trim(),
@@ -128,7 +161,7 @@ public class TxtBookStorage implements BookStorage {
                 p[7].trim(), parseInt(p[8], ln), parseDouble(p[9], ln));
     }
 
-    // RareBook
+    /** Розбирає RareBook (13 полів). */
     private RareBook parseRareBook(String[] p, int ln) {
         checkLength(p, 13, ln, "RAREBOOK");
         return new RareBook(p[1].trim(), p[2].trim(),
@@ -143,19 +176,24 @@ public class TxtBookStorage implements BookStorage {
     // Збереження
     // ---------------------------------------------------------------
 
+    /**
+     * Записує всі книги до текстового файлу у pipe-delimited форматі.
+     *
+     * @param books колекція для збереження
+     */
     @Override
     public void save(ArrayList<Book> books) {
         BufferedWriter writer = null;
         try {
             writer = new BufferedWriter(new FileWriter(filePath));
-            writer.write("# Book Manager");
+            writer.write("# Book Manager — auto-generated, do not edit manually");
             writer.newLine();
 
             for (int i = 0; i < books.size(); i++) {
                 writer.write(serialize(books.get(i)));
                 writer.newLine();
             }
-            System.out.println("  [TXT] Saved " + books.size() + " books to " + filePath);
+            System.out.println("  [TXT] Saved " + books.size() + " book(s) to " + filePath);
         } catch (IOException e) {
             System.out.println("  [TXT] Error saving to " + filePath + ": " + e.getMessage());
         } finally {
@@ -165,6 +203,12 @@ public class TxtBookStorage implements BookStorage {
         }
     }
 
+    /**
+     * Серіалізує один об'єкт {@link Book} у pipe-delimited рядок.
+     *
+     * @param book об'єкт для серіалізації
+     * @return рядок у форматі файлу
+     */
     private String serialize(Book book) {
         // Спільні поля базового класу
         String base = book.getTitle() + WRITE_DELIMITER

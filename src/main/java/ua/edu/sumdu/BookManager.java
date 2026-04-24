@@ -9,9 +9,16 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
- * Контролер програми "Book Manager".
+ * Контролер програми «Book Manager».
  *
- * <p>Підтримує ієрархію з п'яти класів:</p>
+ * <p>Відповідає за:</p>
+ * <ul>
+ *   <li>консольне меню та взаємодію з користувачем;</li>
+ *   <li>зберігання колекції {@code ArrayList<Book>};</li>
+ *   <li>координацію завантаження/збереження через {@link BookStorage}.</li>
+ * </ul>
+ *
+ * <p>Ієрархія підтримуваних класів:</p>
  * <pre>
  * Book
  * ├── EBook
@@ -20,20 +27,14 @@ import java.util.Scanner;
  *     └── RareBook
  * </pre>
  *
- * <p>Усі створені об'єкти зберігаються в одній колекції
- * {@code ArrayList<Book>}, яка на початку роботи порожня.
- * Файли для зберігання чи завантаження не використовуються.</p>
- *
- * <p>Головне меню:</p>
- * <ol>
- *   <li>Створити новий об'єкт → підменю вибору типу → введення даних</li>
- *   <li>Вивести інформацію про всі об'єкти</li>
- *   <li>Завершити роботу</li>
- * </ol>
- * <p>Усі помилки введення (нечислові дані, порожні рядки, некоректні значення)
- * перехоплюються та повідомляються користувачу без завершення програми.</p>
+ * <p>На старті завантажує дані з {@code input.txt} та {@code input.json}.
+ * При завершенні зберігає актуальний стан до обох файлів.</p>
  */
 public class BookManager {
+
+    // ---------------------------------------------------------------
+    // Константи — шляхи до файлів
+    // ---------------------------------------------------------------
 
     /** Шлях до текстового файлу зберігання. */
     private static final String TXT_FILE  = "input.txt";
@@ -41,7 +42,11 @@ public class BookManager {
     /** Шлях до JSON-файлу зберігання (альтернативний варіант). */
     private static final String JSON_FILE = "input.json";
 
-    /** Єдина колекція для об'єктів усіх типів ієрархії. Порожня на старті. */
+    // ---------------------------------------------------------------
+    // Поля
+    // ---------------------------------------------------------------
+
+    /** Єдина колекція для об'єктів усієї ієрархії. */
     private final ArrayList<Book> books;
 
     /** Сховище у форматі текстового файлу. */
@@ -53,15 +58,28 @@ public class BookManager {
     /** Спільний Scanner для всієї програми. */
     private final Scanner scanner;
 
+    // ---------------------------------------------------------------
     // Конструктор
+    // ---------------------------------------------------------------
+
+    /**
+     * Ініціалізує контролер: створює сховища та порожню колекцію.
+     * Дані завантажуються при виклику {@link #run()}.
+     */
     public BookManager() {
         this.txtStorage  = new TxtBookStorage(TXT_FILE);
         this.jsonStorage = new JsonBookStorage(JSON_FILE);
         this.books       = new ArrayList<Book>();
         this.scanner     = new Scanner(System.in);
     }
+
+    // ---------------------------------------------------------------
+    // Точка входу в контролер
+    // ---------------------------------------------------------------
+
     /**
-     * Запускає консольний цикл меню.
+     * Запускає головний цикл програми:
+     * завантажує дані → цикл меню → зберігає дані → закриває сканер.
      */
     public void run() {
         printBanner();
@@ -91,6 +109,9 @@ public class BookManager {
     // Операції при ініціації програми
     // ---------------------------------------------------------------
 
+    /**
+     * Виводить інформаційну шапку програми.
+     */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
         System.out.println("║            BOOK MANAGER  v5.0            ║");
@@ -98,7 +119,13 @@ public class BookManager {
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
-    // Завантаження книг з текстового файлу
+    /**
+     * Завантажує книги з файлів при старті програми.
+     *
+     * <p>Спочатку завантажує {@code input.txt}; якщо той порожній —
+     * намагається завантажити {@code input.json}. Завдяки цьому обидва
+     * формати залишаються актуальними після збереження.</p>
+     */
     private void loadBooks() {
         System.out.println("\n--- Loading data ---");
         ArrayList<Book> loaded = txtStorage.load();
@@ -113,7 +140,9 @@ public class BookManager {
         System.out.println("  Collection size on start: " + books.size() + "\n");
     }
 
-    // Збереження книг у текстовий файл
+    /**
+     * Зберігає поточний стан колекції до обох форматів при виході.
+     */
     private void saveBooks() {
         System.out.println("\n--- Saving data ---");
         txtStorage.save(books);
@@ -121,11 +150,11 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Меню
+    // Головне меню
     // ---------------------------------------------------------------
 
     /**
-     * Виводить головне меню на екран.
+     * Виводить пункти головного меню.
      */
     private void printMainMenu() {
         System.out.println("==========================================");
@@ -156,7 +185,7 @@ public class BookManager {
 
     /**
      * Показує підменю вибору типу об'єкта та делегує до відповідного
-     * методу створення. Пункт «0» дозволяє повернутись до головного
+     * методу створення. Пункт {@code 0} дозволяє повернутись до головного
      * меню без створення об'єкта.
      */
     private void createObject() {
@@ -220,9 +249,9 @@ public class BookManager {
             int    year         = readInt("Year:     ");
             double price        = readDouble("Price:    ");
             Genre  genre        = readEnum(Genre.values(),"Genre");
-            int    pages        = readInt("Pages:   ");
+            int    pages        = readInt("Pages:  ");
             String fileFormat   = readNonEmptyString("File format (EPUB/PDF/MOBI): ");
-            double fileSizeMB   = readDouble("File size (MB):   ");
+            double fileSizeMB   = readDouble("File size (MB):  ");
             String downloadUrl  = readNonEmptyString("Download URL: ");
 
             books.add(new EBook(title, author, year, price, genre, pages,
