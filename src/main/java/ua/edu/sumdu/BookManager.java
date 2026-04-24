@@ -3,6 +3,7 @@ package ua.edu.sumdu;
 import ua.edu.sumdu.model.*;
 import ua.edu.sumdu.storage.BookStorage;
 import ua.edu.sumdu.storage.TxtBookStorage;
+import ua.edu.sumdu.storage.JsonBookStorage;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -37,11 +38,17 @@ public class BookManager {
     /** Шлях до текстового файлу зберігання. */
     private static final String TXT_FILE  = "input.txt";
 
+    /** Шлях до JSON-файлу зберігання (альтернативний варіант). */
+    private static final String JSON_FILE = "input.json";
+
     /** Єдина колекція для об'єктів усіх типів ієрархії. Порожня на старті. */
     private static final ArrayList<Book> books = new ArrayList<>();
 
     /** Сховище у форматі текстового файлу. */
     private final BookStorage txtStorage = new TxtBookStorage(TXT_FILE);
+
+    /** Сховище у форматі JSON. */
+    private final BookStorage jsonStorage = new JsonBookStorage(JSON_FILE);
 
     /** Спільний Scanner для всієї програми. */
     private static final Scanner scanner = new Scanner(System.in);
@@ -78,6 +85,10 @@ public class BookManager {
         System.out.println("\n--- Loading data ---");
         ArrayList<Book> loaded = txtStorage.load();
 
+        if (loaded.isEmpty()) {
+            loaded = jsonStorage.load();
+        }
+
         for (int i = 0; i < loaded.size(); i++) {
             books.add(loaded.get(i));
         }
@@ -88,6 +99,7 @@ public class BookManager {
     private void saveBooks() {
         System.out.println("\n--- Saving data ---");
         txtStorage.save(books);
+        jsonStorage.save(books);
     }
 
     // ---------------------------------------------------------------
