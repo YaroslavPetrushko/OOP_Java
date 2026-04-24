@@ -1,6 +1,8 @@
 package ua.edu.sumdu;
 
 import ua.edu.sumdu.model.*;
+import ua.edu.sumdu.storage.BookStorage;
+import ua.edu.sumdu.storage.TxtBookStorage;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -32,8 +34,14 @@ import java.util.Scanner;
  */
 public class BookManager {
 
+    /** Шлях до текстового файлу зберігання. */
+    private static final String TXT_FILE  = "input.txt";
+
     /** Єдина колекція для об'єктів усіх типів ієрархії. Порожня на старті. */
     private static final ArrayList<Book> books = new ArrayList<>();
+
+    /** Сховище у форматі текстового файлу. */
+    private final BookStorage txtStorage = new TxtBookStorage(TXT_FILE);
 
     /** Спільний Scanner для всієї програми. */
     private static final Scanner scanner = new Scanner(System.in);
@@ -43,6 +51,7 @@ public class BookManager {
      */
     public  void run() {
         System.out.println("=== Book Manager ===");
+        loadBooks();
 
         boolean running = true;
         while (running) {
@@ -53,6 +62,7 @@ public class BookManager {
                 case 1 -> createObject();
                 case 2 -> printAllBooks();
                 case 3 -> {
+                    saveBooks();
                     System.out.println("Goodbye!");
                     running = false;
                 }
@@ -61,6 +71,23 @@ public class BookManager {
         }
 
         scanner.close();
+    }
+
+    // Завантаження книг з текстового файлу
+    private void loadBooks() {
+        System.out.println("\n--- Loading data ---");
+        ArrayList<Book> loaded = txtStorage.load();
+
+        for (int i = 0; i < loaded.size(); i++) {
+            books.add(loaded.get(i));
+        }
+        System.out.println("  Collection size on start: " + books.size() + "\n");
+    }
+
+    // Збереження книг у текстовий файл
+    private void saveBooks() {
+        System.out.println("\n--- Saving data ---");
+        txtStorage.save(books);
     }
 
     // ---------------------------------------------------------------
@@ -235,7 +262,7 @@ public class BookManager {
             String        author            = readNonEmptyString("Author:   ");
             int           year              = readInt("Year:     ");
             double        price             = readDouble("Price:    ");
-            Genre genre             = readEnum(Genre.values(), "Genre:  ");
+            Genre         genre             = readEnum(Genre.values(), "Genre:  ");
             int           pages             = readInt("Pages:   ");
             String        publisher         = readNonEmptyString("Publisher: ");
             int           edition           = readInt("Edition:   ");
