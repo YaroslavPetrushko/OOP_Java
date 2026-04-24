@@ -1,4 +1,4 @@
-package ua.edu.sumdu;
+package ua.edu.sumdu.model;
 /**
  * Виняток, що викидається при передачі некоректних даних у клас {@link Book}.
  * <p>

@@ -1,4 +1,4 @@
-package ua.edu.sumdu;
+package ua.edu.sumdu.model;
 
 /**
  * Перелік літературних жанрів книги.
