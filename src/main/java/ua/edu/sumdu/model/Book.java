@@ -1,4 +1,4 @@
-package ua.edu.sumdu;
+package ua.edu.sumdu.model;
 
 import java.util.Objects;
 import java.time.Year;

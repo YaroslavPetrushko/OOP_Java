@@ -1,6 +1,7 @@
 package ua.edu.sumdu;
 
 import org.junit.jupiter.api.Test;
+import ua.edu.sumdu.model.*;
 
 import java.util.ArrayList;
 

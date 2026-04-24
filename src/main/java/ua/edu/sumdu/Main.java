@@ -1,5 +1,7 @@
 package ua.edu.sumdu;
 
+import ua.edu.sumdu.model.*;
+
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -235,7 +237,7 @@ public class Main {
             String        author            = readNonEmptyString("Author:   ");
             int           year              = readInt("Year:     ");
             double        price             = readDouble("Price:    ");
-            Genre         genre             = readEnum(Genre.values(), "Genre:  ");
+            Genre genre             = readEnum(Genre.values(), "Genre:  ");
             int           pages             = readInt("Pages:   ");
             String        publisher         = readNonEmptyString("Publisher: ");
             int           edition           = readInt("Edition:   ");
