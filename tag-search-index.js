@@ -1,1 +1,1 @@
-tagSearchIndex = [{"l":"Serialized Form","h":"","k":"18","u":"serialized-form.html"}];updateSearchResults();
+tagSearchIndex = [{"l":"Serialized Form","h":"","k":"18","u":"serialized-form.html"},{"l":"Формат JSON-файлу","h":"class ua.edu.sumdu.storage.JsonBookStorage","k":"16","u":"ua/edu/sumdu/storage/JsonBookStorage.html#-json---heading"},{"l":"Формат рядка (поля розділено символом |):","h":"class ua.edu.sumdu.storage.TxtBookStorage","k":"16","u":"ua/edu/sumdu/storage/TxtBookStorage.html#--heading"}];updateSearchResults();
