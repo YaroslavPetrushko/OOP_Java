@@ -42,27 +42,34 @@ public class BookManager {
     private static final String JSON_FILE = "input.json";
 
     /** Єдина колекція для об'єктів усіх типів ієрархії. Порожня на старті. */
-    private static final ArrayList<Book> books = new ArrayList<>();
+    private final ArrayList<Book> books;
 
     /** Сховище у форматі текстового файлу. */
-    private final BookStorage txtStorage = new TxtBookStorage(TXT_FILE);
+    private final BookStorage txtStorage;
 
     /** Сховище у форматі JSON. */
-    private final BookStorage jsonStorage = new JsonBookStorage(JSON_FILE);
+    private final BookStorage jsonStorage;
 
     /** Спільний Scanner для всієї програми. */
-    private static final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner;
 
+    // Конструктор
+    public BookManager() {
+        this.txtStorage  = new TxtBookStorage(TXT_FILE);
+        this.jsonStorage = new JsonBookStorage(JSON_FILE);
+        this.books       = new ArrayList<Book>();
+        this.scanner     = new Scanner(System.in);
+    }
     /**
      * Запускає консольний цикл меню.
      */
-    public  void run() {
-        System.out.println("=== Book Manager ===");
+    public void run() {
+        printBanner();
         loadBooks();
 
         boolean running = true;
         while (running) {
-            printMenu();
+            printMainMenu();
             int choice = readMenuChoice();
 
             switch (choice) {
@@ -78,6 +85,17 @@ public class BookManager {
         }
 
         scanner.close();
+    }
+
+    // ---------------------------------------------------------------
+    // Операції при ініціації програми
+    // ---------------------------------------------------------------
+
+    private void printBanner() {
+        System.out.println("╔══════════════════════════════════════════╗");
+        System.out.println("║            BOOK MANAGER  v5.0            ║");
+        System.out.println("║  5-class hierarchy | TXT + JSON storage  ║");
+        System.out.println("╚══════════════════════════════════════════╝");
     }
 
     // Завантаження книг з текстового файлу
@@ -109,8 +127,8 @@ public class BookManager {
     /**
      * Виводить головне меню на екран.
      */
-    private static void printMenu() {
-        System.out.println("--------------------");
+    private void printMainMenu() {
+        System.out.println("==========================================");
         System.out.println("1. Create new book");
         System.out.println("2. Show all books");
         System.out.println("3. Exit");
@@ -123,7 +141,7 @@ public class BookManager {
      *
      * @return вибраний пункт меню або {@code -1} при помилці введення
      */
-    private static int readMenuChoice() {
+    private int readMenuChoice() {
         String line = scanner.nextLine().trim();
         try {
             return Integer.parseInt(line);
@@ -141,7 +159,7 @@ public class BookManager {
      * методу створення. Пункт «0» дозволяє повернутись до головного
      * меню без створення об'єкта.
      */
-    private static void createObject() {
+    private void createObject() {
         System.out.println("\n--- Select type ---");
         System.out.println("  1. Book (base)");
         System.out.println("  2. EBook");
@@ -173,7 +191,7 @@ public class BookManager {
      * Зчитує дані для базової {@link Book} та додає її до колекції.
      * При будь-якій помилці введення виводить повідомлення і повертається до меню.
      */
-    private static void createBook() {
+    private void createBook() {
         System.out.println("--- Add new Book ---");
         try {
             String title    = readNonEmptyString("Title:  ");
@@ -194,7 +212,7 @@ public class BookManager {
     /**
      * Зчитує дані для {@link EBook} та додає її до колекції.
      */
-    private static void createEBook() {
+    private void createEBook() {
         System.out.println("--- Add EBook ---");
         try {
             String title        = readNonEmptyString("Title:    ");
@@ -203,7 +221,7 @@ public class BookManager {
             double price        = readDouble("Price:    ");
             Genre  genre        = readEnum(Genre.values(),"Genre");
             int    pages        = readInt("Pages:   ");
-            String fileFormat   = readNonEmptyString("File format (e.g. EPUB, PDF): ");
+            String fileFormat   = readNonEmptyString("File format (EPUB/PDF/MOBI): ");
             double fileSizeMB   = readDouble("File size (MB):   ");
             String downloadUrl  = readNonEmptyString("Download URL: ");
 
@@ -219,7 +237,7 @@ public class BookManager {
     /**
      * Зчитує дані для {@link AudioBook} та додає її до колекції.
      */
-    private static void createAudioBook() {
+    private void createAudioBook() {
         System.out.println("--- Add AudioBook ---");
         try {
             String title            = readNonEmptyString("Title:    ");
@@ -230,7 +248,7 @@ public class BookManager {
             int    pages            = readInt("Pages (original):    ");
             String narrator         = readNonEmptyString("Narrator:     ");
             int    durationMinutes  = readInt("Duration (minutes):  ");
-            String audioFormat      = readNonEmptyString("Audio format (e.g. MP3, AAC, FLAC): ");
+            String audioFormat      = readNonEmptyString("Audio format (MP3/AAC/FLAC): ");
 
             books.add(new AudioBook(title, author, year, price, genre, pages,
                     narrator, durationMinutes, audioFormat));
@@ -243,7 +261,7 @@ public class BookManager {
     /**
      * Зчитує дані для {@link PaperBook} та додає її до колекції.
      */
-    private static void createPaperBook() {
+    private void createPaperBook() {
         System.out.println("--- Add PaperBook ---");
         try {
             String title       = readNonEmptyString("Title:     ");
@@ -267,7 +285,7 @@ public class BookManager {
     /**
      * Зчитує дані для {@link RareBook} та додає її до колекції.
      */
-    private static void createRareBook() {
+    private void createRareBook() {
         System.out.println("--- Add RareBook ---");
         try {
             String        title             = readNonEmptyString("Title:    ");
@@ -303,7 +321,7 @@ public class BookManager {
      * відповідно до реального типу кожного об'єкта.</p>
      * Якщо список порожній — повідомляє про це.
      */
-    private static void printAllBooks() {
+    private void printAllBooks() {
         System.out.println("\n--- Book List ---");
         System.out.println("\n--- All objects [" + books.size() + "] ---");
         if (books.isEmpty()) {
@@ -328,7 +346,7 @@ public class BookManager {
      * @param prompt текст підказки, що виводиться перед полем введення
      * @return непорожній рядок після {@code trim()}
      */
-    private static String readNonEmptyString(String prompt) {
+    private String readNonEmptyString(String prompt) {
         while (true) {
             System.out.print(prompt);
             String value = scanner.nextLine().trim();
@@ -346,7 +364,7 @@ public class BookManager {
      * @param prompt текст підказки
      * @return введене ціле число
      */
-    private static int readInt(String prompt) {
+    private int readInt(String prompt) {
         while (true) {
             System.out.print(prompt);
             String line = scanner.nextLine().trim();
@@ -368,7 +386,7 @@ public class BookManager {
      * @param prompt текст підказки
      * @return введене дійсне число
      */
-    private static double readDouble(String prompt) {
+    private double readDouble(String prompt) {
         while (true) {
             System.out.print(prompt);
             // Замінюємо кому на крапку, щоб підтримувати обидва формати
@@ -393,7 +411,7 @@ public class BookManager {
      * @param label  назва поля для підказки
      * @return обрана константа
      */
-    private static <T extends Enum<T>> T readEnum(T[] values, String label) {
+    private <T extends Enum<T>> T readEnum(T[] values, String label) {
         System.out.println("  " + label + ":");
         for (int i = 0; i < values.length; i++) {
             System.out.println("    " + (i + 1) + ". " + values[i]);
