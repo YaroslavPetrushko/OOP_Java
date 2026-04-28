@@ -47,7 +47,7 @@ public class BookManager {
     // ---------------------------------------------------------------
 
     /** Єдина колекція для об'єктів усієї ієрархії. */
-    private final ArrayList<Book> books;
+    private final Library library;
 
     /** Сховище у форматі текстового файлу. */
     private final BookStorage txtStorage;
@@ -67,9 +67,9 @@ public class BookManager {
      * Дані завантажуються при виклику {@link #run()}.
      */
     public BookManager() {
+        this.library     = new Library("City Library", "Main St. 1");
         this.txtStorage  = new TxtBookStorage(TXT_FILE);
         this.jsonStorage = new JsonBookStorage(JSON_FILE);
-        this.books       = new ArrayList<Book>();
         this.scanner     = new Scanner(System.in);
     }
 
@@ -115,8 +115,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v6.0            ║");
-        System.out.println("║     Book search | TXT + JSON storage     ║");
+        System.out.println("║            BOOK MANAGER  v7.0            ║");
+        System.out.println("║ Library | Aggregation | TXT+JSON storage ║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -129,16 +129,12 @@ public class BookManager {
      */
     private void loadBooks() {
         System.out.println("\n--- Loading data ---");
-        ArrayList<Book> loaded = txtStorage.load();
-
-        if (loaded.isEmpty()) {
-            loaded = jsonStorage.load();
+        txtStorage.load(library);
+        if (library.getEntryCount() == 0) {
+            jsonStorage.load(library);
         }
-
-        for (int i = 0; i < loaded.size(); i++) {
-            books.add(loaded.get(i));
-        }
-        System.out.println("  Collection size on start: " + books.size() + "\n");
+        System.out.println("  Library \"" + library.getName()
+                + "\": " + library.getEntryCount() + " unique title(s) on start.\n");
     }
 
     /**
@@ -146,8 +142,8 @@ public class BookManager {
      */
     private void saveBooks() {
         System.out.println("\n--- Saving data ---");
-        txtStorage.save(books);
-        jsonStorage.save(books);
+        txtStorage.save(library);
+        jsonStorage.save(library);
     }
 
     // ---------------------------------------------------------------
@@ -194,8 +190,6 @@ public class BookManager {
             System.out.println("  1. By author");
             System.out.println("  2. By genre");
             System.out.println("  3. By price range");
-            System.out.println("  4. By book type");
-            System.out.println("  5. By year");
             System.out.println("  0. Back to main menu");
             System.out.print("Criterion: ");
 
@@ -206,8 +200,6 @@ public class BookManager {
                 case 1 -> searchByAuthor();
                 case 2 -> searchByGenre();
                 case 3 -> searchByPriceRange();
-                case 4 -> searchByType();
-                case 5 -> searchByYear();
                 case 0 -> System.out.println("  Cancelled.\n");
                 default -> System.out.println("  [!] Unknown criterion.\n");
             }
@@ -220,13 +212,8 @@ public class BookManager {
      * Приклад: "George" -> [Book] "1984" by **George Orwell** | ...
      */
     private void searchByAuthor() {
-        ArrayList<Book> result = new ArrayList<>();
         String author = readNonEmptyString("Author name: ");
-        for (Book book : books) {
-            if (book.getAuthor().contains(author)) {
-                result.add(book);
-            }
-        }
+        ArrayList<BookEntry> result = library.findByAuthor(author);
         printSearchResult(result, "author contains \"" + author + "\"");
     }
 
@@ -235,69 +222,25 @@ public class BookManager {
      * Exact search
      * З'являється меню вибору жанру (як при створенні книги)
      */
-
     private void searchByGenre() {
-        ArrayList<Book> result = new ArrayList<>();
         Genre genre = readEnum(Genre.values(), "Genre");
         System.out.println();
-        for (Book book : books) {
-            if (book.getGenre().equals(genre)) {
-                result.add(book);
-            }
-        }
+        ArrayList<BookEntry> result = library.findByGenre(genre);
         printSearchResult(result, "genre = " + genre);
     }
 
-    // Пошук за ціною
+    /**
+     * Пошук за ціновим діапазоном
+     * Range search
+     * Виводить всі книги що входять до діапазону min<=price<=max
+     */
     private void searchByPriceRange() {
-        ArrayList<Book> result = new ArrayList<>();
         double minPrice = readDouble("Min price ($): ");
         double maxPrice = readDouble("Max price ($): ");
-        if (maxPrice<minPrice) {
-            System.out.println("Invalid price range.");
-            return;
-        }
-        for  (Book book : books) {
-            if (book.getPrice() >= minPrice && book.getPrice() <= maxPrice) {
-                result.add(book);
-            }
-        }
+        ArrayList<BookEntry> result = library.findByPriceRange(minPrice, maxPrice);
         printSearchResult(result,
                 "price in [$" + String.format("%.2f", minPrice)
                         + " .. $" + String.format("%.2f", maxPrice) + "]");
-    }
-
-    /**
-     * Пошук за типом книги
-     * Partial match search, case sensitive
-     * Пошук за частковим збігом, залежить від регістру
-     * Приклад: "Audio" -> [AudioBook]...
-     */
-    private void searchByType(){
-        ArrayList<Book> result = new ArrayList<>();
-        String type = readNonEmptyString("Type: ");
-        for (Book book : books) {
-            if (book.getClass().getSimpleName().contains(type)) {
-                result.add(book);
-            }
-        }
-        printSearchResult(result,"book type contains \"" + type + "\"");
-    }
-
-    /**
-     * Пошук за роком публікації
-     * Exact search - пошук за точним збігом
-     * Приклад: "1937" -> [AudioBook] "The Hobbit" by J.R.R. Tolkien | **1937** | ...
-     */
-    private void searchByYear(){
-        ArrayList<Book> result = new ArrayList<>();
-        String year = readNonEmptyString("Year: ");
-        for (Book book : books) {
-            if(book.getYear()==Integer.parseInt(year)){
-                result.add(book);
-            }
-        }
-        printSearchResult(result,"year contains \"" + year + "\"");
     }
 
     /**
@@ -306,7 +249,7 @@ public class BookManager {
      * @param result    список знайдених записів
      * @param criterion текстовий опис критерію
      */
-    private void printSearchResult(ArrayList<Book> result, String criterion) {
+    private void printSearchResult(ArrayList<BookEntry> result, String criterion) {
         System.out.println("--- Search results [" + criterion + "] ---");
         if (result.isEmpty()) {
             System.out.println("  No objects found matching the given criterion.\n");
@@ -369,9 +312,10 @@ public class BookManager {
             double price    = readDouble("Price:  ");
             Genre genre     = readEnum(Genre.values(), "Genre");
             int    pages    = readInt("Pages:  ");
+            int    quantity = readInt("Quantity:  ");
 
-            books.add(new Book(title, author, year, price, genre, pages));
-            System.out.println("  [OK] Book added. Total in collection: " + books.size() + "\n");
+            library.addNewBook(new Book(title, author, year, price, genre, pages), quantity);
+            System.out.println("  [OK] Book added. Library size " + library.getEntryCount() + "\n");
 
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
@@ -393,10 +337,11 @@ public class BookManager {
             String fileFormat   = readNonEmptyString("File format (EPUB/PDF/MOBI): ");
             double fileSizeMB   = readDouble("File size (MB):  ");
             String downloadUrl  = readNonEmptyString("Download URL: ");
+            int    quantity    = readInt("Quantity:  ");
 
-            books.add(new EBook(title, author, year, price, genre, pages,
-                    fileFormat, fileSizeMB, downloadUrl));
-            System.out.println("  [OK] EBook added. Total in collection: " + books.size() + "\n");
+            library.addNewBook(new EBook(title, author, year, price, genre, pages,
+                    fileFormat, fileSizeMB, downloadUrl), quantity);
+            System.out.println("  [OK] EBook added. Library size: " + library.getEntryCount() + "\n");
 
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
@@ -418,10 +363,11 @@ public class BookManager {
             String narrator         = readNonEmptyString("Narrator:     ");
             int    durationMinutes  = readInt("Duration (minutes):  ");
             String audioFormat      = readNonEmptyString("Audio format (MP3/AAC/FLAC): ");
+            int    quantity        = readInt("Quantity:  ");
 
-            books.add(new AudioBook(title, author, year, price, genre, pages,
-                    narrator, durationMinutes, audioFormat));
-            System.out.println("  [OK] AudioBook added. Total in collection: " + books.size() + "\n");
+            library.addNewBook(new AudioBook(title, author, year, price, genre, pages,
+                    narrator, durationMinutes, audioFormat), quantity);
+            System.out.println("  [OK] AudioBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
         }
@@ -442,10 +388,11 @@ public class BookManager {
             String publisher   = readNonEmptyString("Publisher:  ");
             int    edition     = readInt("Edition:    ");
             double weightGrams = readDouble("Weight (g): ");
+            int    quantity    = readInt("Quantity:  ");
 
-            books.add(new PaperBook(title, author, year, price, genre, pages,
-                    publisher, edition, weightGrams));
-            System.out.println("  [OK] PaperBook added. Total in collection: " + books.size() + "\n");
+            library.addNewBook(new PaperBook(title, author, year, price, genre, pages,
+                    publisher, edition, weightGrams), quantity);
+            System.out.println("  [OK] PaperBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
         }
@@ -469,11 +416,12 @@ public class BookManager {
             BookCondition condition         = readEnum(BookCondition.values(), "Condition");
             double        estimatedValueUSD = readDouble("Estimated value ($):  ");
             int           acquisitionYear   = readInt("Acquisition year:     ");
+            int           quantity          = readInt("Quantity:  ");
 
-            books.add(new RareBook(title, author, year, price, genre, pages,
+            library.addNewBook(new RareBook(title, author, year, price, genre, pages,
                     publisher, edition, weightGrams,
-                    condition, estimatedValueUSD, acquisitionYear));
-            System.out.println("  [OK] RareBook added. Total in collection: " + books.size() + "\n");
+                    condition, estimatedValueUSD, acquisitionYear), quantity);
+            System.out.println("  [OK] RareBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
         }
@@ -491,15 +439,15 @@ public class BookManager {
      * Якщо список порожній — повідомляє про це.
      */
     private void printAllBooks() {
-        System.out.println("\n--- Book List ---");
-        System.out.println("\n--- All objects [" + books.size() + "] ---");
-        if (books.isEmpty()) {
-            System.out.println("  (collection is empty)\n");
+        System.out.println("\n--- Library: " + library.getName()
+                + " [" + library.getEntryCount() + " title(s)] ---");
+        if (library.getEntryCount() == 0) {
+            System.out.println("  (library is empty)\n");
             return;
         }
-        for (int i = 0; i < books.size(); i++) {
-            Book book = books.get(i);   // посилання базового типу
-            System.out.println("  " + (i + 1) + ". " + book);  // toString() — поліморфний виклик
+        for (int i = 0; i < library.getEntryCount(); i++) {
+            BookEntry entry = library.getEntry(i);
+            System.out.println("  " + (i + 1) + ". " + entry);
         }
         System.out.println();
     }
