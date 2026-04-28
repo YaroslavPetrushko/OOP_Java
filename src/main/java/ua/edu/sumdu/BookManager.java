@@ -207,13 +207,42 @@ public class BookManager {
     }
 
     // Пошук за автором
-    private void searchByAuthor() {}
+    private void searchByAuthor() {
+        ArrayList<Book> result = new ArrayList<>();
+        String author = readNonEmptyString("Author name: ");
+        for (Book book : books) {
+            if (book.getAuthor().equals(author)) {
+                result.add(book);
+            }
+        }
+        //printSearchResult
+    }
 
     // Пошук за жанром
-    private void searchByGenre() {}
+    private void searchByGenre() {
+        ArrayList<Book> result = new ArrayList<>();
+        Genre genre = readEnum(Genre.values(), "Genre");
+        System.out.println();
+        for (Book book : books) {
+            if (book.getGenre().equals(genre)) {
+                result.add(book);
+            }
+        }
+        //printSearchResult
+    }
 
     // Пошук за ціною
-    private void searchByPriceRange() {}
+    private void searchByPriceRange() {
+        ArrayList<Book> result = new ArrayList<>();
+        double minPrice = readDouble("Min price ($): ");
+        double maxPrice = readDouble("Max price ($): ");
+        for  (Book book : books) {
+            if (book.getPrice() < minPrice || book.getPrice() > maxPrice) {
+                result.add(book);
+            }
+        }
+        //printSearchResult
+    }
 
 
     // ---------------------------------------------------------------
