@@ -91,9 +91,10 @@ public class BookManager {
             int choice = readMenuChoice();
 
             switch (choice) {
-                case 1 -> createObject();
-                case 2 -> printAllBooks();
-                case 3 -> {
+                case 1 -> searchMenu();
+                case 2 -> createObject();
+                case 3 -> printAllBooks();
+                case 4 -> {
                     saveBooks();
                     System.out.println("Goodbye!");
                     running = false;
@@ -114,8 +115,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v5.0            ║");
-        System.out.println("║  5-class hierarchy | TXT + JSON storage  ║");
+        System.out.println("║            BOOK MANAGER  v6.0            ║");
+        System.out.println("║     Book search | TXT + JSON storage     ║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -158,9 +159,10 @@ public class BookManager {
      */
     private void printMainMenu() {
         System.out.println("==========================================");
-        System.out.println("1. Create new book");
-        System.out.println("2. Show all books");
-        System.out.println("3. Exit");
+        System.out.println("1. Search book");
+        System.out.println("2. Create new book");
+        System.out.println("3. Show all books");
+        System.out.println("4. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -179,8 +181,146 @@ public class BookManager {
         }
     }
 
+
     // ---------------------------------------------------------------
-    // Пункт 1: Створення нової книги
+    // Пункт 1: Пошук книги
+    // ---------------------------------------------------------------
+
+    /**
+     * Підменю вибору критерію пошуку. {@code 0} — повернення до меню.
+     */
+    private void searchMenu() {
+            System.out.println("\n--- Search ---");
+            System.out.println("  1. By author");
+            System.out.println("  2. By genre");
+            System.out.println("  3. By price range");
+            System.out.println("  4. By book type");
+            System.out.println("  5. By year");
+            System.out.println("  0. Back to main menu");
+            System.out.print("Criterion: ");
+
+            int choice = readMenuChoice();
+            System.out.println();
+
+            switch (choice) {
+                case 1 -> searchByAuthor();
+                case 2 -> searchByGenre();
+                case 3 -> searchByPriceRange();
+                case 4 -> searchByType();
+                case 5 -> searchByYear();
+                case 0 -> System.out.println("  Cancelled.\n");
+                default -> System.out.println("  [!] Unknown criterion.\n");
+            }
+    }
+
+    /**
+     * Пошук за автором
+     * Partial match search, case sensitive
+     * Пошук за частковим збігом, залежить від регістру
+     * Приклад: "George" -> [Book] "1984" by **George Orwell** | ...
+     */
+    private void searchByAuthor() {
+        ArrayList<Book> result = new ArrayList<>();
+        String author = readNonEmptyString("Author name: ");
+        for (Book book : books) {
+            if (book.getAuthor().contains(author)) {
+                result.add(book);
+            }
+        }
+        printSearchResult(result, "author contains \"" + author + "\"");
+    }
+
+    /**
+     * Пошук за жанром
+     * Exact search
+     * З'являється меню вибору жанру (як при створенні книги)
+     */
+
+    private void searchByGenre() {
+        ArrayList<Book> result = new ArrayList<>();
+        Genre genre = readEnum(Genre.values(), "Genre");
+        System.out.println();
+        for (Book book : books) {
+            if (book.getGenre().equals(genre)) {
+                result.add(book);
+            }
+        }
+        printSearchResult(result, "genre = " + genre);
+    }
+
+    // Пошук за ціною
+    private void searchByPriceRange() {
+        ArrayList<Book> result = new ArrayList<>();
+        double minPrice = readDouble("Min price ($): ");
+        double maxPrice = readDouble("Max price ($): ");
+        if (maxPrice<minPrice) {
+            System.out.println("Invalid price range.");
+            return;
+        }
+        for  (Book book : books) {
+            if (book.getPrice() >= minPrice && book.getPrice() <= maxPrice) {
+                result.add(book);
+            }
+        }
+        printSearchResult(result,
+                "price in [$" + String.format("%.2f", minPrice)
+                        + " .. $" + String.format("%.2f", maxPrice) + "]");
+    }
+
+    /**
+     * Пошук за типом книги
+     * Partial match search, case sensitive
+     * Пошук за частковим збігом, залежить від регістру
+     * Приклад: "Audio" -> [AudioBook]...
+     */
+    private void searchByType(){
+        ArrayList<Book> result = new ArrayList<>();
+        String type = readNonEmptyString("Type: ");
+        for (Book book : books) {
+            if (book.getClass().getSimpleName().contains(type)) {
+                result.add(book);
+            }
+        }
+        printSearchResult(result,"book type contains \"" + type + "\"");
+    }
+
+    /**
+     * Пошук за роком публікації
+     * Exact search - пошук за точним збігом
+     * Приклад: "1937" -> [AudioBook] "The Hobbit" by J.R.R. Tolkien | **1937** | ...
+     */
+    private void searchByYear(){
+        ArrayList<Book> result = new ArrayList<>();
+        String year = readNonEmptyString("Year: ");
+        for (Book book : books) {
+            if(book.getYear()==Integer.parseInt(year)){
+                result.add(book);
+            }
+        }
+        printSearchResult(result,"year contains \"" + year + "\"");
+    }
+
+    /**
+     * Виводить результати пошуку або повідомлення про відсутність збігів..
+     *
+     * @param result    список знайдених записів
+     * @param criterion текстовий опис критерію
+     */
+    private void printSearchResult(ArrayList<Book> result, String criterion) {
+        System.out.println("--- Search results [" + criterion + "] ---");
+        if (result.isEmpty()) {
+            System.out.println("  No objects found matching the given criterion.\n");
+            return;
+        }
+        System.out.println("  Found " + result.size() + " record(s):");
+        for (int i = 0; i < result.size(); i++) {
+            System.out.println("  " + (i + 1) + ". " + result.get(i));
+        }
+        System.out.println();
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 2: Створення нової книги
     // ---------------------------------------------------------------
 
     /**
@@ -340,7 +480,7 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 2: Виведення всіх книг
+    // Пункт 3: Виведення всіх книг
     // ---------------------------------------------------------------
 
     /**
