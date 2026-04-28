@@ -91,9 +91,10 @@ public class BookManager {
             int choice = readMenuChoice();
 
             switch (choice) {
-                case 1 -> createObject();
-                case 2 -> printAllBooks();
-                case 3 -> {
+                case 1 -> searchMenu();
+                case 2 -> createObject();
+                case 3 -> printAllBooks();
+                case 4 -> {
                     saveBooks();
                     System.out.println("Goodbye!");
                     running = false;
@@ -158,9 +159,10 @@ public class BookManager {
      */
     private void printMainMenu() {
         System.out.println("==========================================");
-        System.out.println("1. Create new book");
-        System.out.println("2. Show all books");
-        System.out.println("3. Exit");
+        System.out.println("1. Search book");
+        System.out.println("2. Create new book");
+        System.out.println("3. Show all books");
+        System.out.println("4. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -179,8 +181,43 @@ public class BookManager {
         }
     }
 
+
     // ---------------------------------------------------------------
-    // Пункт 1: Створення нової книги
+    // Пункт 1: Пошук книги
+    // ---------------------------------------------------------------
+
+    private void searchMenu() {
+            System.out.println("\n--- Search ---");
+            System.out.println("  1. By author");
+            System.out.println("  2. By genre");
+            System.out.println("  3. By price range");
+            System.out.println("  0. Back to main menu");
+            System.out.print("Criterion: ");
+
+            int choice = readMenuChoice();
+            System.out.println();
+
+            switch (choice) {
+                case 1 -> searchByAuthor();
+                case 2 -> searchByGenre();
+                case 3 -> searchByPriceRange();
+                case 0 -> System.out.println("  Cancelled.\n");
+                default -> System.out.println("  [!] Unknown criterion.\n");
+            }
+    }
+
+    // Пошук за автором
+    private void searchByAuthor() {}
+
+    // Пошук за жанром
+    private void searchByGenre() {}
+
+    // Пошук за ціною
+    private void searchByPriceRange() {}
+
+
+    // ---------------------------------------------------------------
+    // Пункт 2: Створення нової книги
     // ---------------------------------------------------------------
 
     /**
@@ -340,7 +377,7 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 2: Виведення всіх книг
+    // Пункт 3: Виведення всіх книг
     // ---------------------------------------------------------------
 
     /**
