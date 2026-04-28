@@ -237,7 +237,7 @@ public class BookManager {
         double minPrice = readDouble("Min price ($): ");
         double maxPrice = readDouble("Max price ($): ");
         for  (Book book : books) {
-            if (book.getPrice() < minPrice || book.getPrice() > maxPrice) {
+            if (book.getPrice() >= minPrice && book.getPrice() <= maxPrice) {
                 result.add(book);
             }
         }
