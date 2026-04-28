@@ -215,7 +215,7 @@ public class BookManager {
                 result.add(book);
             }
         }
-        //printSearchResult
+        printSearchResult(result, "author contains \"" + author + "\"");
     }
 
     // Пошук за жанром
@@ -228,7 +228,7 @@ public class BookManager {
                 result.add(book);
             }
         }
-        //printSearchResult
+        printSearchResult(result, "genre = " + genre);
     }
 
     // Пошук за ціною
@@ -241,9 +241,23 @@ public class BookManager {
                 result.add(book);
             }
         }
-        //printSearchResult
+        printSearchResult(result,
+                "price in [$" + String.format("%.2f", minPrice)
+                        + " .. $" + String.format("%.2f", maxPrice) + "]");
     }
 
+    private void printSearchResult(ArrayList<Book> result, String criterion) {
+        System.out.println("--- Search results [" + criterion + "] ---");
+        if (result.isEmpty()) {
+            System.out.println("  No objects found matching the given criterion.\n");
+            return;
+        }
+        System.out.println("  Found " + result.size() + " record(s):");
+        for (int i = 0; i < result.size(); i++) {
+            System.out.println("  " + (i + 1) + ". " + result.get(i));
+        }
+        System.out.println();
+    }
 
     // ---------------------------------------------------------------
     // Пункт 2: Створення нової книги
