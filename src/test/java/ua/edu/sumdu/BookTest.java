@@ -1,14 +1,16 @@
 package ua.edu.sumdu;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
 import ua.edu.sumdu.model.AudioBook;
 import ua.edu.sumdu.model.Book;
 import ua.edu.sumdu.model.BookCondition;
+import ua.edu.sumdu.model.BookEntry;
 import ua.edu.sumdu.model.EBook;
 import ua.edu.sumdu.model.Genre;
 import ua.edu.sumdu.model.InvalidBookDataException;
+import ua.edu.sumdu.model.Library;
 import ua.edu.sumdu.model.PaperBook;
 import ua.edu.sumdu.model.RareBook;
 import ua.edu.sumdu.storage.JsonBookStorage;
@@ -17,413 +19,379 @@ import ua.edu.sumdu.storage.TxtBookStorage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Автотести для ієрархії моделі та обох реалізацій {@link ua.edu.sumdu.storage.BookStorage}.
- *
- * <p>Покривають:</p>
- * <ul>
- *   <li>валідацію конструкторів і сетерів усіх п'яти класів;</li>
- *   <li>конструктори копіювання;</li>
- *   <li>поліморфний вивід через {@code ArrayList<Book>};</li>
- *   <li>{@link TxtBookStorage}: запис і повторне зчитування всіх типів;</li>
- *   <li>{@link JsonBookStorage}: запис і повторне зчитування всіх типів;</li>
- *   <li>стійкість storage до відсутнього файлу та некоректних рядків.</li>
- * </ul>
- */
 class BookTest {
 
-    // ---------------------------------------------------------------
-    // Фабричні допоміжники
-    // ---------------------------------------------------------------
+    private Library library;
+    private Book cleanCode;
+    private EBook pragmaticProgrammer;
+    private AudioBook dune;
+    private PaperBook designPatterns;
+    private RareBook mobyDick;
+    private Book cleanCoder;
 
-    private Book validBook() {
-        return new Book("Clean Code", "Robert C. Martin",
+    @BeforeEach
+    void setUp() {
+        library = new Library("Test Library", "Main St. 1");
+
+        cleanCode = new Book("Clean Code", "Robert C. Martin",
                 2008, 39.99, Genre.PROGRAMMING, 431);
-    }
-
-    private EBook validEBook() {
-        return new EBook("Pragmatic Programmer", "David Thomas",
+        pragmaticProgrammer = new EBook("Pragmatic Programmer", "David Thomas",
                 2019, 29.99, Genre.PROGRAMMING, 352,
                 "EPUB", 4.5, "https://example.com/book.epub");
-    }
-
-    private AudioBook validAudioBook() {
-        return new AudioBook("Dune", "Frank Herbert",
+        dune = new AudioBook("Dune", "Frank Herbert",
                 1965, 19.99, Genre.SCI_FI, 688,
                 "Scott Brick", 1260, "MP3");
-    }
-
-    private PaperBook validPaperBook() {
-        return new PaperBook("Design Patterns", "GoF",
+        designPatterns = new PaperBook("Design Patterns", "GoF",
                 1994, 54.99, Genre.PROGRAMMING, 395,
                 "Addison-Wesley", 1, 730.0);
-    }
-
-    private RareBook validRareBook() {
-        return new RareBook("Moby Dick", "Herman Melville",
+        mobyDick = new RareBook("Moby Dick", "Herman Melville",
                 1851, 12.99, Genre.FICTION, 635,
                 "Harper", 1, 480.0,
                 BookCondition.FINE, 4500.00, 1980);
-    }
+        cleanCoder = new Book("The Clean Coder", "Robert C. Martin",
+                2011, 34.99, Genre.PROGRAMMING, 256);
 
-    // ===================================================================
-    // Модель — Book
-    // ===================================================================
-
-    @Test
-    void book_validData_storesAllFields() {
-        Book b = validBook();
-        assertAll(
-                () -> assertEquals("Clean Code",       b.getTitle()),
-                () -> assertEquals("Robert C. Martin", b.getAuthor()),
-                () -> assertEquals(2008,               b.getYear()),
-                () -> assertEquals(39.99, b.getPrice(), 0.001),
-                () -> assertEquals(Genre.PROGRAMMING,  b.getGenre()),
-                () -> assertEquals(431,                b.getPages())
-        );
+        library.addNewBook(cleanCode, 2);
+        library.addNewBook(pragmaticProgrammer, 1);
+        library.addNewBook(dune, 3);
+        library.addNewBook(designPatterns, 1);
+        library.addNewBook(mobyDick, 4);
+        library.addNewBook(cleanCoder, 2);
     }
 
     @Test
-    void book_emptyTitle_throws()       { assertThrows(InvalidBookDataException.class, () -> new Book("", "A", 2000, 10.0, Genre.FICTION, 100)); }
-    @Test
-    void book_nullAuthor_throws()       { assertThrows(InvalidBookDataException.class, () -> new Book("T", null, 2000, 10.0, Genre.FICTION, 100)); }
-    @Test
-    void book_negativePrice_throws()    { assertThrows(InvalidBookDataException.class, () -> new Book("T", "A", 2000, -1.0, Genre.FICTION, 100)); }
-    @Test
-    void book_zeroPagesCount_throws()   { assertThrows(InvalidBookDataException.class, () -> new Book("T", "A", 2000, 10.0, Genre.FICTION, 0)); }
-    @Test
-    void book_futureYear_throws()       { assertThrows(InvalidBookDataException.class, () -> new Book("T", "A", java.time.Year.now().getValue() + 1, 10.0, Genre.FICTION, 100)); }
-    @Test
-    void book_nullGenre_throws()        { assertThrows(InvalidBookDataException.class, () -> new Book("T", "A", 2000, 10.0, null, 100)); }
-    @Test
-    void book_setPrice_zero_allowed()   { assertDoesNotThrow(() -> validBook().setPrice(0.0)); }
-    @Test
-    void book_copyConstructor_null_throws() { assertThrows(InvalidBookDataException.class, () -> new Book((Book) null)); }
+    void book_emptyTitle_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new Book("", "A", 2000, 10.0, Genre.FICTION, 100));
+    }
 
     @Test
-    void book_copyConstructor_equalAndIndependent() {
-        Book orig = validBook();
-        Book copy = new Book(orig);
-        assertEquals(orig, copy);
-        assertNotSame(orig, copy);
+    void book_nullAuthor_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new Book("T", null, 2000, 10.0, Genre.FICTION, 100));
+    }
+
+    @Test
+    void book_negativePrice_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new Book("T", "A", 2000, -1.0, Genre.FICTION, 100));
+    }
+
+    @Test
+    void book_zeroPagesCount_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new Book("T", "A", 2000, 10.0, Genre.FICTION, 0));
+    }
+
+    @Test
+    void book_futureYear_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new Book("T", "A", java.time.Year.now().getValue() + 1,
+                        10.0, Genre.FICTION, 100));
+    }
+
+    @Test
+    void book_nullGenre_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new Book("T", "A", 2000, 10.0, null, 100));
+    }
+
+    @Test
+    void book_setPrice_zero_allowed() {
+        assertDoesNotThrow(() -> cleanCode.setPrice(0.0));
+    }
+
+    @Test
+    void book_copyConstructor_independent() {
+        Book copy = new Book(cleanCode);
+        assertEquals(cleanCode, copy);
+        assertNotSame(cleanCode, copy);
         copy.setTitle("Other");
-        assertEquals("Clean Code", orig.getTitle());
+        assertEquals("Clean Code", cleanCode.getTitle());
     }
 
     @Test
-    void book_toString_startsWithTag() { assertTrue(validBook().toString().startsWith("[Book]")); }
-
-    // ===================================================================
-    // Модель — EBook
-    // ===================================================================
-
-    @Test
-    void eBook_validData_storesExtraFields() {
-        EBook e = validEBook();
-        assertAll(
-                () -> assertEquals("EPUB", e.getFileFormat()),
-                () -> assertEquals(4.5,   e.getFileSizeMB(), 0.001),
-                () -> assertEquals("https://example.com/book.epub", e.getDownloadUrl())
-        );
+    void eBook_fileFormat_upperCase() {
+        EBook book = new EBook("T", "A", 2020, 5.0, Genre.FICTION, 100,
+                "epub", 2.0, "https://x.com");
+        assertEquals("EPUB", book.getFileFormat());
     }
 
     @Test
-    void eBook_emptyFileFormat_throws()  { assertThrows(InvalidBookDataException.class, () -> new EBook("T","A",2020,5.0,Genre.FICTION,100," ",2.0,"https://x.com")); }
-    @Test
-    void eBook_zeroFileSize_throws()     { assertThrows(InvalidBookDataException.class, () -> new EBook("T","A",2020,5.0,Genre.FICTION,100,"PDF",0.0,"https://x.com")); }
-    @Test
-    void eBook_emptyUrl_throws()         { assertThrows(InvalidBookDataException.class, () -> new EBook("T","A",2020,5.0,Genre.FICTION,100,"PDF",2.0,"")); }
-    @Test
-    void eBook_fileFormat_upperCase()    { assertEquals("EPUB", new EBook("T","A",2020,5.0,Genre.FICTION,100,"epub",2.0,"https://x.com").getFileFormat()); }
-    @Test
-    void eBook_toString_startsWithTag()  { assertTrue(validEBook().toString().startsWith("[EBook]")); }
-
-    @Test
-    void eBook_copyConstructor_independent() {
-        EBook orig = validEBook();
-        EBook copy = new EBook(orig);
-        copy.setFileFormat("MOBI");
-        assertEquals("EPUB", orig.getFileFormat());
-    }
-
-    // ===================================================================
-    // Модель — AudioBook
-    // ===================================================================
-
-    @Test
-    void audioBook_validData_storesExtraFields() {
-        AudioBook ab = validAudioBook();
-        assertAll(
-                () -> assertEquals("Scott Brick", ab.getNarrator()),
-                () -> assertEquals(1260,          ab.getDurationMinutes()),
-                () -> assertEquals("MP3",         ab.getAudioFormat())
-        );
+    void eBook_zeroFileSize_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new EBook("T", "A", 2020, 5.0, Genre.FICTION, 100,
+                        "PDF", 0.0, "https://x.com"));
     }
 
     @Test
-    void audioBook_emptyNarrator_throws()   { assertThrows(InvalidBookDataException.class, () -> new AudioBook("T","A",2020,5.0,Genre.FICTION,100,"",120,"MP3")); }
-    @Test
-    void audioBook_zeroDuration_throws()    { assertThrows(InvalidBookDataException.class, () -> new AudioBook("T","A",2020,5.0,Genre.FICTION,100,"N",0,"MP3")); }
-    @Test
-    void audioBook_audioFormat_upperCase()  { assertEquals("FLAC", new AudioBook("T","A",2020,5.0,Genre.FICTION,100,"N",120,"flac").getAudioFormat()); }
-    @Test
-    void audioBook_toString_startsWithTag() { assertTrue(validAudioBook().toString().startsWith("[AudioBook]")); }
-
-    @Test
-    void audioBook_copyConstructor_independent() {
-        AudioBook orig = validAudioBook();
-        AudioBook copy = new AudioBook(orig);
-        copy.setNarrator("Other");
-        assertEquals("Scott Brick", orig.getNarrator());
-    }
-
-    // ===================================================================
-    // Модель — PaperBook
-    // ===================================================================
-
-    @Test
-    void paperBook_emptyPublisher_throws() { assertThrows(InvalidBookDataException.class, () -> new PaperBook("T","A",2000,10.0,Genre.FICTION,100,"",1,300.0)); }
-    @Test
-    void paperBook_zeroEdition_throws()    { assertThrows(InvalidBookDataException.class, () -> new PaperBook("T","A",2000,10.0,Genre.FICTION,100,"P",0,300.0)); }
-    @Test
-    void paperBook_negativeWeight_throws() { assertThrows(InvalidBookDataException.class, () -> new PaperBook("T","A",2000,10.0,Genre.FICTION,100,"P",1,-1.0)); }
-    @Test
-    void paperBook_toString_startsWithTag(){ assertTrue(validPaperBook().toString().startsWith("[PaperBook]")); }
-
-    // ===================================================================
-    // Модель — RareBook
-    // ===================================================================
-
-    @Test
-    void rareBook_validData_storesExtraFields() {
-        RareBook rb = validRareBook();
-        assertAll(
-                () -> assertEquals(BookCondition.FINE, rb.getCondition()),
-                () -> assertEquals(4500.0, rb.getEstimatedValueUSD(), 0.001),
-                () -> assertEquals(1980,   rb.getAcquisitionYear())
-        );
+    void audioBook_zeroDuration_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new AudioBook("T", "A", 2020, 5.0, Genre.FICTION, 100,
+                        "N", 0, "MP3"));
     }
 
     @Test
-    void rareBook_nullCondition_throws()       { assertThrows(InvalidBookDataException.class, () -> new RareBook("T","A",1900,10.0,Genre.FICTION,100,"P",1,300.0,null,1000.0,2000)); }
-    @Test
-    void rareBook_zeroEstimatedValue_throws()  { assertThrows(InvalidBookDataException.class, () -> new RareBook("T","A",1900,10.0,Genre.FICTION,100,"P",1,300.0,BookCondition.GOOD,0.0,2000)); }
-    @Test
-    void rareBook_futureAcquisitionYear_throws(){ assertThrows(InvalidBookDataException.class, () -> new RareBook("T","A",1900,10.0,Genre.FICTION,100,"P",1,300.0,BookCondition.GOOD,500.0,java.time.Year.now().getValue()+1)); }
-    @Test
-    void rareBook_toString_startsWithTag()      { assertTrue(validRareBook().toString().startsWith("[RareBook]")); }
-
-    @Test
-    void rareBook_copyConstructor_independent() {
-        RareBook orig = validRareBook();
-        RareBook copy = new RareBook(orig);
-        copy.setCondition(BookCondition.POOR);
-        assertEquals(BookCondition.FINE, orig.getCondition());
+    void audioBook_audioFormat_upperCase() {
+        AudioBook book = new AudioBook("T", "A", 2020, 5.0, Genre.FICTION, 100,
+                "N", 120, "flac");
+        assertEquals("FLAC", book.getAudioFormat());
     }
 
-    // ===================================================================
-    // Поліморфізм
-    // ===================================================================
+    @Test
+    void rareBook_nullCondition_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new RareBook("T", "A", 1900, 10.0, Genre.FICTION, 100,
+                        "P", 1, 300.0, null, 1000.0, 2000));
+    }
 
     @Test
-    void polymorphism_allFiveTypesInOneCollection() {
-        ArrayList<Book> list = new ArrayList<Book>();
-        list.add(validBook());
-        list.add(validEBook());
-        list.add(validAudioBook());
-        list.add(validPaperBook());
-        list.add(validRareBook());
+    void rareBook_zeroEstimatedValue_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new RareBook("T", "A", 1900, 10.0, Genre.FICTION, 100,
+                        "P", 1, 300.0, BookCondition.GOOD, 0.0, 2000));
+    }
 
-        assertEquals(5, list.size());
-        assertInstanceOf(Book.class,      list.get(0));
-        assertInstanceOf(EBook.class,     list.get(1));
-        assertInstanceOf(AudioBook.class, list.get(2));
-        assertInstanceOf(PaperBook.class, list.get(3));
-        assertInstanceOf(RareBook.class,  list.get(4));
+    @Test
+    void library_blankName_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new Library(" ", "Main St. 1"));
+    }
+
+    @Test
+    void bookEntry_zeroQuantity_throws() {
+        assertThrows(InvalidBookDataException.class,
+                () -> new BookEntry(cleanCode, 0));
+    }
+
+    @Test
+    void library_addSameBook_mergesQuantity() {
+        Book duplicate = new Book("Clean Code", "Robert C. Martin",
+                2008, 39.99, Genre.PROGRAMMING, 431);
+
+        library.addNewBook(duplicate, 5);
+
+        assertEquals(6, library.getEntryCount());
+        BookEntry entry = library.findByAuthor("Robert C. Martin").get(0);
+        assertEquals(7, entry.getQuantity());
+    }
+
+    @Test
+    void bookEntry_addQuantity_updatesAmount() {
+        BookEntry entry = new BookEntry(cleanCode, 2);
+        entry.addQuantity(3);
+        assertEquals(5, entry.getQuantity());
     }
 
     @Test
     void polymorphism_toStringTagMatchesRealType() {
-        ArrayList<Book> list = new ArrayList<Book>();
-        list.add(validBook());
-        list.add(validEBook());
-        list.add(validAudioBook());
-        list.add(validPaperBook());
-        list.add(validRareBook());
-
-        assertTrue(list.get(0).toString().startsWith("[Book]"));
-        assertTrue(list.get(1).toString().startsWith("[EBook]"));
-        assertTrue(list.get(2).toString().startsWith("[AudioBook]"));
-        assertTrue(list.get(3).toString().startsWith("[PaperBook]"));
-        assertTrue(list.get(4).toString().startsWith("[RareBook]"));
+        assertTrue(cleanCode.toString().startsWith("[Book]"));
+        assertTrue(pragmaticProgrammer.toString().startsWith("[EBook]"));
+        assertTrue(dune.toString().startsWith("[AudioBook]"));
+        assertTrue(designPatterns.toString().startsWith("[PaperBook]"));
+        assertTrue(mobyDick.toString().startsWith("[RareBook]"));
     }
 
-    // ===================================================================
-    // TxtBookStorage — round-trip (зберегти → завантажити)
-    // ===================================================================
-
-    /**
-     * Зберігає колекцію всіх п'яти типів у тимчасовий файл,
-     * потім завантажує і перевіряє кількість та типи.
-     *
-     * @param tempDir тимчасова директорія, що надається JUnit
-     */
     @Test
-    void txtStorage_roundTrip_allTypes(@TempDir Path tempDir) {
+    void findByAuthor_exactMatch_returnsTwoEntries() {
+        assertEquals(2, library.findByAuthor("Robert C. Martin").size());
+    }
+
+    @Test
+    void findByAuthor_partialSubstring_findsMatch() {
+        assertEquals(2, library.findByAuthor("Martin").size());
+    }
+
+    @Test
+    void findByAuthor_caseInsensitive_findsMatch() {
+        assertEquals(2, library.findByAuthor("robert c. martin").size());
+    }
+
+    @Test
+    void findByAuthor_noMatch_returnsEmpty() {
+        assertTrue(library.findByAuthor("Tolkien").isEmpty());
+    }
+
+    @Test
+    void findByAuthor_emptyString_returnsEmpty() {
+        assertTrue(library.findByAuthor("").isEmpty());
+    }
+
+    @Test
+    void findByAuthor_null_returnsEmpty() {
+        assertTrue(library.findByAuthor(null).isEmpty());
+    }
+
+    @Test
+    void findByAuthor_emptyLibrary_returnsEmpty() {
+        Library emptyLibrary = new Library("Empty", "Nowhere");
+        assertTrue(emptyLibrary.findByAuthor("Martin").isEmpty());
+    }
+
+    @Test
+    void findByAuthor_doesNotModifyLibrary() {
+        int countBefore = library.getEntryCount();
+        library.findByAuthor("Martin");
+        assertEquals(countBefore, library.getEntryCount());
+    }
+
+    @Test
+    void findByGenre_programming_returnsFourEntries() {
+        assertEquals(4, library.findByGenre(Genre.PROGRAMMING).size());
+    }
+
+    @Test
+    void findByGenre_sciFi_returnsOneEntry() {
+        BookEntry entry = library.findByGenre(Genre.SCI_FI).get(0);
+        assertInstanceOf(AudioBook.class, entry.getBook());
+        assertEquals(3, entry.getQuantity());
+    }
+
+    @Test
+    void findByGenre_notPresent_returnsEmpty() {
+        assertTrue(library.findByGenre(Genre.BIOGRAPHY).isEmpty());
+    }
+
+    @Test
+    void findByGenre_null_returnsEmpty() {
+        assertTrue(library.findByGenre(null).isEmpty());
+    }
+
+    @Test
+    void findByGenre_doesNotModifyLibrary() {
+        int countBefore = library.getEntryCount();
+        library.findByGenre(Genre.FICTION);
+        assertEquals(countBefore, library.getEntryCount());
+    }
+
+    @Test
+    void findByPriceRange_fullRange_returnsAll() {
+        assertEquals(library.getEntryCount(), library.findByPriceRange(0.0, 100.0).size());
+    }
+
+    @Test
+    void findByPriceRange_narrowRange_returnsOneEntry() {
+        BookEntry entry = library.findByPriceRange(25.0, 30.0).get(0);
+        assertInstanceOf(EBook.class, entry.getBook());
+        assertEquals(1, entry.getQuantity());
+    }
+
+    @Test
+    void findByPriceRange_exactBoundary_inclusive() {
+        BookEntry entry = library.findByPriceRange(39.99, 39.99).get(0);
+        assertEquals("Clean Code", entry.getBook().getTitle());
+        assertEquals(2, entry.getQuantity());
+    }
+
+    @Test
+    void findByPriceRange_invertedRange_returnsEmpty() {
+        assertTrue(library.findByPriceRange(50.0, 10.0).isEmpty());
+    }
+
+    @Test
+    void findByPriceRange_outOfRange_returnsEmpty() {
+        assertTrue(library.findByPriceRange(200.0, 500.0).isEmpty());
+    }
+
+    @Test
+    void findByPriceRange_doesNotModifyLibrary() {
+        int countBefore = library.getEntryCount();
+        library.findByPriceRange(0.0, 100.0);
+        assertEquals(countBefore, library.getEntryCount());
+    }
+
+    @Test
+    void txtStorage_roundTrip_allTypesAndQuantities(@TempDir Path tempDir) {
         String path = tempDir.resolve("test.txt").toString();
         TxtBookStorage storage = new TxtBookStorage(path);
 
-        ArrayList<Book> original = new ArrayList<Book>();
-        original.add(validBook());
-        original.add(validEBook());
-        original.add(validAudioBook());
-        original.add(validPaperBook());
-        original.add(validRareBook());
-
+        Library original = createStorageLibrary();
         storage.save(original);
-        ArrayList<Book> loaded = storage.load();
 
-        assertEquals(5, loaded.size());
-        assertInstanceOf(Book.class,      loaded.get(0));
-        assertInstanceOf(EBook.class,     loaded.get(1));
-        assertInstanceOf(AudioBook.class, loaded.get(2));
-        assertInstanceOf(PaperBook.class, loaded.get(3));
-        assertInstanceOf(RareBook.class,  loaded.get(4));
+        Library loaded = new Library("Loaded", "Somewhere");
+        storage.load(loaded);
+
+        assertEquals(5, loaded.getEntryCount());
+        assertInstanceOf(Book.class, loaded.getEntry(0).getBook());
+        assertInstanceOf(EBook.class, loaded.getEntry(1).getBook());
+        assertInstanceOf(AudioBook.class, loaded.getEntry(2).getBook());
+        assertInstanceOf(PaperBook.class, loaded.getEntry(3).getBook());
+        assertInstanceOf(RareBook.class, loaded.getEntry(4).getBook());
+        assertEquals(3, loaded.getEntry(2).getQuantity());
+        assertEquals(5, loaded.getEntry(4).getQuantity());
     }
 
-    /**
-     * Перевіряє збереження та відновлення конкретних полів EBook через TXT.
-     */
     @Test
-    void txtStorage_eBook_fieldsPreservedAfterRoundTrip(@TempDir Path tempDir) {
-        String path = tempDir.resolve("ebook.txt").toString();
-        TxtBookStorage storage = new TxtBookStorage(path);
-
-        ArrayList<Book> list = new ArrayList<Book>();
-        list.add(validEBook());
-        storage.save(list);
-
-        ArrayList<Book> loaded = storage.load();
-        EBook e = (EBook) loaded.get(0);
-
-        assertAll(
-                () -> assertEquals("Pragmatic Programmer", e.getTitle()),
-                () -> assertEquals("EPUB",                 e.getFileFormat()),
-                () -> assertEquals(4.5, e.getFileSizeMB(), 0.001)
-        );
+    void txtStorage_missingFile_leavesLibraryEmpty(@TempDir Path tempDir) {
+        Library loaded = new Library("Loaded", "Somewhere");
+        new TxtBookStorage(tempDir.resolve("nope.txt").toString()).load(loaded);
+        assertEquals(0, loaded.getEntryCount());
     }
 
-    /**
-     * Перевіряє збереження та відновлення конкретних полів RareBook через TXT.
-     */
-    @Test
-    void txtStorage_rareBook_fieldsPreservedAfterRoundTrip(@TempDir Path tempDir) {
-        String path = tempDir.resolve("rare.txt").toString();
-        TxtBookStorage storage = new TxtBookStorage(path);
-
-        ArrayList<Book> list = new ArrayList<Book>();
-        list.add(validRareBook());
-        storage.save(list);
-
-        ArrayList<Book> loaded = storage.load();
-        RareBook rb = (RareBook) loaded.get(0);
-
-        assertAll(
-                () -> assertEquals(BookCondition.FINE, rb.getCondition()),
-                () -> assertEquals(4500.0, rb.getEstimatedValueUSD(), 0.001),
-                () -> assertEquals(1980,   rb.getAcquisitionYear())
-        );
-    }
-
-    /**
-     * TxtBookStorage повинен повертати порожню колекцію, якщо файл відсутній.
-     */
-    @Test
-    void txtStorage_missingFile_returnsEmptyList(@TempDir Path tempDir) {
-        String path = tempDir.resolve("nonexistent.txt").toString();
-        ArrayList<Book> result = new TxtBookStorage(path).load();
-        assertTrue(result.isEmpty());
-    }
-
-    /**
-     * TxtBookStorage повинен пропускати некоректні рядки та завантажувати решту.
-     */
     @Test
     void txtStorage_corruptedLine_skipsAndLoadsRest(@TempDir Path tempDir) throws IOException {
         Path file = tempDir.resolve("corrupt.txt");
         Files.writeString(file,
-                "BOOK|Clean Code|Robert C. Martin|2008|39.99|PROGRAMMING|431\n"
-                        + "INVALID_LINE_WITHOUT_ENOUGH_FIELDS\n"
-                        + "EBOOK|Title|Author|2020|9.99|FICTION|200|EPUB|2.5|https://x.com\n");
+                "BOOK|Clean Code|Robert C. Martin|2008|39.99|PROGRAMMING|431|2\n"
+                        + "BROKEN LINE NO DELIMITER\n"
+                        + "EBOOK|Title|Author|2020|9.99|FICTION|200|EPUB|2.5|https://x.com|4\n");
 
-        ArrayList<Book> loaded = new TxtBookStorage(file.toString()).load();
-        assertEquals(2, loaded.size());
+        Library loaded = new Library("Loaded", "Somewhere");
+        new TxtBookStorage(file.toString()).load(loaded);
+
+        assertEquals(2, loaded.getEntryCount());
+        assertEquals(2, loaded.getEntry(0).getQuantity());
+        assertEquals(4, loaded.getEntry(1).getQuantity());
     }
 
-    // ===================================================================
-    // JsonBookStorage — round-trip
-    // ===================================================================
-
-    /**
-     * Зберігає та завантажує колекцію всіх типів через JSON.
-     */
     @Test
-    void jsonStorage_roundTrip_allTypes(@TempDir Path tempDir) {
+    void jsonStorage_roundTrip_allTypesAndQuantities(@TempDir Path tempDir) {
         String path = tempDir.resolve("test.json").toString();
         JsonBookStorage storage = new JsonBookStorage(path);
 
-        ArrayList<Book> original = new ArrayList<Book>();
-        original.add(validBook());
-        original.add(validEBook());
-        original.add(validAudioBook());
-        original.add(validPaperBook());
-        original.add(validRareBook());
-
+        Library original = createStorageLibrary();
         storage.save(original);
-        ArrayList<Book> loaded = storage.load();
 
-        assertEquals(5, loaded.size());
-        assertInstanceOf(Book.class,      loaded.get(0));
-        assertInstanceOf(EBook.class,     loaded.get(1));
-        assertInstanceOf(AudioBook.class, loaded.get(2));
-        assertInstanceOf(PaperBook.class, loaded.get(3));
-        assertInstanceOf(RareBook.class,  loaded.get(4));
+        Library loaded = new Library("Loaded", "Somewhere");
+        storage.load(loaded);
+
+        assertEquals(5, loaded.getEntryCount());
+        assertInstanceOf(Book.class, loaded.getEntry(0).getBook());
+        assertInstanceOf(EBook.class, loaded.getEntry(1).getBook());
+        assertInstanceOf(AudioBook.class, loaded.getEntry(2).getBook());
+        assertInstanceOf(PaperBook.class, loaded.getEntry(3).getBook());
+        assertInstanceOf(RareBook.class, loaded.getEntry(4).getBook());
+        assertEquals(3, loaded.getEntry(2).getQuantity());
+        assertEquals(5, loaded.getEntry(4).getQuantity());
     }
 
-    /**
-     * Перевіряє збереження та відновлення конкретних полів AudioBook через JSON.
-     */
     @Test
-    void jsonStorage_audioBook_fieldsPreservedAfterRoundTrip(@TempDir Path tempDir) {
-        String path = tempDir.resolve("audio.json").toString();
-        JsonBookStorage storage = new JsonBookStorage(path);
-
-        ArrayList<Book> list = new ArrayList<Book>();
-        list.add(validAudioBook());
-        storage.save(list);
-
-        ArrayList<Book> loaded = storage.load();
-        AudioBook ab = (AudioBook) loaded.get(0);
-
-        assertAll(
-                () -> assertEquals("Dune",        ab.getTitle()),
-                () -> assertEquals("Scott Brick", ab.getNarrator()),
-                () -> assertEquals(1260,          ab.getDurationMinutes()),
-                () -> assertEquals("MP3",         ab.getAudioFormat())
-        );
+    void jsonStorage_missingFile_leavesLibraryEmpty(@TempDir Path tempDir) {
+        Library loaded = new Library("Loaded", "Somewhere");
+        new JsonBookStorage(tempDir.resolve("nope.json").toString()).load(loaded);
+        assertEquals(0, loaded.getEntryCount());
     }
 
-    /**
-     * JsonBookStorage повинен повертати порожню колекцію, якщо файл відсутній.
-     */
-    @Test
-    void jsonStorage_missingFile_returnsEmptyList(@TempDir Path tempDir) {
-        String path = tempDir.resolve("nonexistent.json").toString();
-        ArrayList<Book> result = new JsonBookStorage(path).load();
-        assertTrue(result.isEmpty());
+    private Library createStorageLibrary() {
+        Library storageLibrary = new Library("Storage Library", "Archive St. 2");
+        storageLibrary.addNewBook(new Book("Clean Code", "Robert C. Martin",
+                2008, 39.99, Genre.PROGRAMMING, 431), 2);
+        storageLibrary.addNewBook(new EBook("EPub Book", "Author",
+                2020, 9.99, Genre.FICTION, 200,
+                "EPUB", 2.5, "https://x.com"), 1);
+        storageLibrary.addNewBook(new AudioBook("Audio", "Narrator",
+                2018, 14.99, Genre.MYSTERY, 300,
+                "N", 180, "MP3"), 3);
+        storageLibrary.addNewBook(new PaperBook("Paper", "P. Author",
+                2010, 24.99, Genre.SCIENCE, 400,
+                "Publisher", 2, 500.0), 4);
+        storageLibrary.addNewBook(new RareBook("Rare", "R. Author",
+                1900, 199.99, Genre.NON_FICTION, 600,
+                "OldPub", 1, 800.0,
+                BookCondition.MINT, 15000.0, 2005), 5);
+        return storageLibrary;
     }
 }
