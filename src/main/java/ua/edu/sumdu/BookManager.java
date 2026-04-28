@@ -211,7 +211,7 @@ public class BookManager {
         ArrayList<Book> result = new ArrayList<>();
         String author = readNonEmptyString("Author name: ");
         for (Book book : books) {
-            if (book.getAuthor().equals(author)) {
+            if (book.getAuthor().contains(author)) {
                 result.add(book);
             }
         }
