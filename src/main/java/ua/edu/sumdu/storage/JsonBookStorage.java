@@ -17,7 +17,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 
 /**
  * Реалізація {@link BookStorage} для JSON-файлу з використанням бібліотеки Gson.
@@ -39,6 +38,9 @@ public class JsonBookStorage implements BookStorage {
 
     /** Поле типу в JSON. */
     private static final String CLASS_TYPE_FIELD = "classType";
+
+    /** Кількість книг. */
+    private static final String QUANTITY_FIELD   = "quantity";
 
     /** Шлях до JSON-файлу. */
     private final String filePath;
@@ -65,7 +67,7 @@ public class JsonBookStorage implements BookStorage {
         this.rawGson  = new Gson();
         this.gson = new GsonBuilder()
                 .setPrettyPrinting()
-                .registerTypeHierarchyAdapter(Book.class, new BookAdapter())
+                .registerTypeHierarchyAdapter(BookEntry.class, new BookEntryAdapter())
                 .create();
     }
 
@@ -76,34 +78,34 @@ public class JsonBookStorage implements BookStorage {
     /**
      * Зчитує книги з JSON-файлу.
      * Пропускає елементи з невідомим або некоректним {@code classType}.
-     *
-     * @return колекція завантажених книг (порожня при помилці)
      */
     @Override
-    public ArrayList<Book> load() {
-        ArrayList<Book> books = new ArrayList<Book>();
+    public void load(Library library) {
+        int loaded = 0;
         FileReader reader = null;
         try {
             reader = new FileReader(filePath);
             JsonArray array = gson.fromJson(reader, JsonArray.class);
             if (array == null) {
                 System.out.println("  [JSON] File is empty: " + filePath);
-                return books;
+                return;
             }
             for (int i = 0; i < array.size(); i++) {
                 try {
-                    Book book = gson.fromJson(array.get(i), Book.class);
-                    if (book != null) {
-                        books.add(book);
+                    BookEntry entry = gson.fromJson(array.get(i), BookEntry.class);
+                    if (entry != null) {
+                        library.addNewBook(entry.getBook(), entry.getQuantity());
+
+                        loaded++;
                     }
                 } catch (JsonParseException | InvalidBookDataException e) {
                     System.out.println("  [JSON] Skipping element " + i + ": " + e.getMessage());
                 }
             }
-            System.out.println("  [JSON] Loaded " + books.size() + " book(s) from " + filePath);
+            System.out.println("  [JSON] Loaded " + loaded + " record(s) from " + filePath);
         } catch (IOException e) {
-            System.out.println("  [JSON] File not found or unreadable: " + filePath
-                    + " — starting with empty collection.");
+            System.out.println("  [JSON] File not found: " + filePath
+                    + " — starting with empty library.");
         } catch (JsonParseException e) {
             System.out.println("  [JSON] Malformed JSON in " + filePath + ": " + e.getMessage());
         } finally {
@@ -111,7 +113,6 @@ public class JsonBookStorage implements BookStorage {
                 try { reader.close(); } catch (IOException ignored) {}
             }
         }
-        return books;
     }
 
     // ---------------------------------------------------------------
@@ -120,16 +121,20 @@ public class JsonBookStorage implements BookStorage {
 
     /**
      * Записує всі книги до JSON-файлу.
-     *
-     * @param books колекція для збереження
      */
     @Override
-    public void save(ArrayList<Book> books) {
+    public void save(Library library) {
         FileWriter writer = null;
         try {
+            // Збираємо масив BookEntry
+            BookEntry[] entries = new BookEntry[library.getEntryCount()];
+            for (int i = 0; i < library.getEntryCount(); i++) {
+                entries[i] = library.getEntry(i);
+            }
+
             writer = new FileWriter(filePath);
-            gson.toJson(books, writer);
-            System.out.println("  [JSON] Saved " + books.size() + " book(s) to " + filePath);
+            gson.toJson(entries, writer);
+            System.out.println("  [JSON] Saved " + library.getEntryCount() + " record(s) to " + filePath);
         } catch (IOException e) {
             System.out.println("  [JSON] Error saving to " + filePath + ": " + e.getMessage());
         } finally {
@@ -152,18 +157,19 @@ public class JsonBookStorage implements BookStorage {
      * При десеріалізації це поле читається першим і визначає,
      * до якого класу ієрархії перетворити решту полів.</p>
      */
-    private class BookAdapter
-            implements JsonSerializer<Book>, JsonDeserializer<Book> {
+    private class BookEntryAdapter
+            implements JsonSerializer<BookEntry>, JsonDeserializer<BookEntry> {
 
         /**
          * Серіалізує об'єкт {@link Book} у JSON з полем {@code classType}.
          */
         @Override
-        public JsonElement serialize(Book src, Type typeOfSrc,
+        public JsonElement serialize(BookEntry src, Type typeOfSrc,
                                      JsonSerializationContext context) {
-            JsonObject obj = rawGson.toJsonTree(src).getAsJsonObject();
-            String classType = src.getClass().getSimpleName().toUpperCase();
-            obj.addProperty(CLASS_TYPE_FIELD, classType);
+            Book book = src.getBook();
+            JsonObject obj = rawGson.toJsonTree(book).getAsJsonObject();
+            obj.addProperty(CLASS_TYPE_FIELD, book.getClass().getSimpleName().toUpperCase());
+            obj.addProperty(QUANTITY_FIELD, src.getQuantity());
             return obj;
         }
 
@@ -174,30 +180,42 @@ public class JsonBookStorage implements BookStorage {
          *                            або має невідоме значення
          */
         @Override
-        public Book deserialize(JsonElement json, Type typeOfT,
-                                JsonDeserializationContext context)
+        public BookEntry deserialize(JsonElement json, Type typeOfT,
+                                     JsonDeserializationContext context)
                 throws JsonParseException {
             JsonObject obj = json.getAsJsonObject();
 
             if (!obj.has(CLASS_TYPE_FIELD)) {
                 throw new JsonParseException("Missing '" + CLASS_TYPE_FIELD + "' field.");
             }
+            if (!obj.has(QUANTITY_FIELD)) {
+                throw new JsonParseException("Missing '" + QUANTITY_FIELD + "' field.");
+            }
 
+            int quantity = obj.get(QUANTITY_FIELD).getAsInt();
             String classType = obj.get(CLASS_TYPE_FIELD).getAsString().toUpperCase();
+
+            Book book;
             switch (classType) {
                 case "BOOK":
-                    return rawGson.fromJson(obj, Book.class);
+                    book = rawGson.fromJson(obj, Book.class);
+                    break;
                 case "EBOOK":
-                    return rawGson.fromJson(obj, EBook.class);
+                    book = rawGson.fromJson(obj, EBook.class);
+                    break;
                 case "AUDIOBOOK":
-                    return rawGson.fromJson(obj, AudioBook.class);
+                    book = rawGson.fromJson(obj, AudioBook.class);
+                    break;
                 case "PAPERBOOK":
-                    return rawGson.fromJson(obj, PaperBook.class);
+                    book = rawGson.fromJson(obj, PaperBook.class);
+                    break;
                 case "RAREBOOK":
-                    return rawGson.fromJson(obj, RareBook.class);
+                    book = rawGson.fromJson(obj, RareBook.class);
+                    break;
                 default:
                     throw new JsonParseException("Unknown classType: " + classType);
             }
+            return new BookEntry(book, quantity);
         }
     }
 }

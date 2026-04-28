@@ -1,8 +1,6 @@
 package ua.edu.sumdu.storage;
 
-import ua.edu.sumdu.model.Book;
-
-import java.util.ArrayList;
+import ua.edu.sumdu.model.Library;
 
 /**
  * Інтерфейс для збереження та завантаження колекції книг.
@@ -18,12 +16,12 @@ public interface BookStorage {
      * Завантажує книги з джерела та повертає їх у вигляді колекції.
      *
      * <p>Якщо джерело відсутнє або пошкоджене — повертається порожній
-     * {@code ArrayList}. Некоректні записи пропускаються з виведенням
+     * {@code Library}. Некоректні записи пропускаються з виведенням
      * попередження у консоль.</p>
      *
      * @return колекція завантажених книг (ніколи не {@code null})
      */
-    ArrayList<Book> load();
+    void load(Library library);
 
     /**
      * Записує поточний вміст колекції до відповідного сховища.
@@ -31,7 +29,7 @@ public interface BookStorage {
      * <p>При помилці запису виводить повідомлення у консоль і
      * не кидає виключень.</p>
      *
-     * @param books колекція книг для збереження; не може бути {@code null}
+     * @param library колекція книг для збереження; не може бути {@code null}
      */
-    void save(ArrayList<Book> books);
+    void save(Library library);
 }
