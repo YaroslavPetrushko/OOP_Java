@@ -83,6 +83,57 @@ public class Library {
     }
 
     // ---------------------------------------------------------------
+    // Методи пошуку (не змінюють колекцію)
+    // ---------------------------------------------------------------
+
+    // Пошук за автором
+    public ArrayList<BookEntry> findByAuthor(String author) {
+        ArrayList<BookEntry> result = new ArrayList<BookEntry>();
+        if (author == null || author.isBlank()) {
+            return result;
+        }
+        String target = author.trim().toLowerCase();
+        for (int i = 0; i < entries.size(); i++) {
+            BookEntry entry = entries.get(i);
+            if (entry.getBook().getAuthor().toLowerCase().contains(target)) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    // Пошук за жанром
+    public ArrayList<BookEntry> findByGenre(Genre genre) {
+        ArrayList<BookEntry> result = new ArrayList<BookEntry>();
+        if (genre == null) {
+            return result;
+        }
+        for (int i = 0; i < entries.size(); i++) {
+            BookEntry entry = entries.get(i);
+            if (entry.getBook().getGenre() == genre) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    // Пошук за ціновим діапазоном
+    public ArrayList<BookEntry> findByPriceRange(double minPrice, double maxPrice) {
+        ArrayList<BookEntry> result = new ArrayList<BookEntry>();
+        if (minPrice > maxPrice) {
+            return result;
+        }
+        for (int i = 0; i < entries.size(); i++) {
+            BookEntry entry = entries.get(i);
+            double price = entry.getBook().getPrice();
+            if (price >= minPrice && price <= maxPrice) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
+    // ---------------------------------------------------------------
     // Object overrides
     // ---------------------------------------------------------------
 
