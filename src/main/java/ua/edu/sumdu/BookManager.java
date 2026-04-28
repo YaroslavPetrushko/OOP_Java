@@ -11,12 +11,17 @@ import java.util.Scanner;
 /**
  * Контролер програми «Book Manager».
  *
- * <p>Відповідає за:</p>
- * <ul>
- *   <li>консольне меню та взаємодію з користувачем;</li>
- *   <li>зберігання колекції {@code ArrayList<Book>};</li>
- *   <li>координацію завантаження/збереження через {@link BookStorage}.</li>
- * </ul>
+ * <p>Делегує зберігання та пошук до екземпляра {@link Library}.
+ * Відповідає виключно за взаємодію з користувачем, введення даних
+ * та координацію завантаження/збереження через {@link BookStorage}.</p>
+ *
+ * <p>Головне меню:</p>
+ * <ol>
+ *   <li>Пошук об'єкта</li>
+ *   <li>Створити новий об'єкт</li>
+ *   <li>Вивести всі об'єкти</li>
+ *   <li>Завершити роботу</li>
+ * </ol>
  *
  * <p>Ієрархія підтримуваних класів:</p>
  * <pre>
@@ -27,7 +32,7 @@ import java.util.Scanner;
  *     └── RareBook
  * </pre>
  *
- * <p>На старті завантажує дані з {@code input.txt} та {@code input.json}.
+ * <p>На старті завантажує дані з {@code input.txt} або {@code input.json}.
  * При завершенні зберігає актуальний стан до обох файлів.</p>
  */
 public class BookManager {
@@ -63,8 +68,8 @@ public class BookManager {
     // ---------------------------------------------------------------
 
     /**
-     * Ініціалізує контролер: створює сховища та порожню колекцію.
-     * Дані завантажуються при виклику {@link #run()}.
+     * Ініціалізує контролер: створює бібліотеку з іменем/адресою за замовчуванням
+     * та обидва сховища.
      */
     public BookManager() {
         this.library     = new Library("City Library", "Main St. 1");
@@ -205,23 +210,12 @@ public class BookManager {
             }
     }
 
-    /**
-     * Пошук за автором
-     * Partial match search, case sensitive
-     * Пошук за частковим збігом, залежить від регістру
-     * Приклад: "George" -> [Book] "1984" by **George Orwell** | ...
-     */
     private void searchByAuthor() {
         String author = readNonEmptyString("Author name: ");
         ArrayList<BookEntry> result = library.findByAuthor(author);
         printSearchResult(result, "author contains \"" + author + "\"");
     }
 
-    /**
-     * Пошук за жанром
-     * Exact search
-     * З'являється меню вибору жанру (як при створенні книги)
-     */
     private void searchByGenre() {
         Genre genre = readEnum(Genre.values(), "Genre");
         System.out.println();
@@ -229,11 +223,6 @@ public class BookManager {
         printSearchResult(result, "genre = " + genre);
     }
 
-    /**
-     * Пошук за ціновим діапазоном
-     * Range search
-     * Виводить всі книги що входять до діапазону min<=price<=max
-     */
     private void searchByPriceRange() {
         double minPrice = readDouble("Min price ($): ");
         double maxPrice = readDouble("Max price ($): ");
@@ -244,7 +233,8 @@ public class BookManager {
     }
 
     /**
-     * Виводить результати пошуку або повідомлення про відсутність збігів..
+     * Виводить результати пошуку або повідомлення про відсутність збігів.
+     * Показує книгу та кількість примірників.
      *
      * @param result    список знайдених записів
      * @param criterion текстовий опис критерію
@@ -315,7 +305,7 @@ public class BookManager {
             int    quantity = readInt("Quantity:  ");
 
             library.addNewBook(new Book(title, author, year, price, genre, pages), quantity);
-            System.out.println("  [OK] Book added. Library size " + library.getEntryCount() + "\n");
+            System.out.println("  [OK] Book added. Library size: " + library.getEntryCount() + "\n");
 
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
@@ -432,7 +422,8 @@ public class BookManager {
     // ---------------------------------------------------------------
 
     /**
-     * Виводить усі об'єкти колекції через посилання базового типу {@link Book}.
+     * Виводить усі записи бібліотеки (книга + кількість примірників)
+     * через посилання базового типу {@link Book}.
      *
      * <p>Демонстрація поліморфізму: метод {@code toString()} викликається
      * відповідно до реального типу кожного об'єкта.</p>
@@ -453,7 +444,7 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Допоміжні методи зчитування
+    // Допоміжні методи введення
     // ---------------------------------------------------------------
 
     /**

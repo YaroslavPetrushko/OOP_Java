@@ -11,17 +11,17 @@ import java.io.IOException;
 /**
  * Реалізація {@link BookStorage} для текстового файлу у форматі pipe-delimited.
  *
- * <h2>Формат рядка (поля розділено символом {@code |}):</h2>
+ * <h2>Формат рядка — поля розділені символом {@code |}, кількість є останнім полем:</h2>
  * <pre>
- * BOOK|title|author|year|price|genre|pages
- * EBOOK|title|author|year|price|genre|pages|fileFormat|fileSizeMB|downloadUrl
- * AUDIOBOOK|title|author|year|price|genre|pages|narrator|durationMinutes|audioFormat
- * PAPERBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams
- * RAREBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams|condition|estimatedValueUSD|acquisitionYear
+ * BOOK|title|author|year|price|genre|pages|quantity
+ * EBOOK|title|author|year|price|genre|pages|fileFormat|fileSizeMB|downloadUrl|quantity
+ * AUDIOBOOK|title|author|year|price|genre|pages|narrator|durationMinutes|audioFormat|quantity
+ * PAPERBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams|quantity
+ * RAREBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams|condition|estimatedValueUSD|acquisitionYear|quantity
  * </pre>
  *
- * <p>Рядки, що починаються з {@code #}, вважаються коментарями і пропускаються.
- * Некоректні рядки пропускаються з виведенням попередження.</p>
+ * <p>Рядки, що починаються з {@code #}, вважаються коментарями та пропускаються.
+ * Некоректні рядки також пропускаються з виведенням попередження.</p>
  *
  * <p><b>Обмеження:</b> рядкові поля не повинні містити символ {@code |}.</p>
  */
@@ -50,8 +50,10 @@ public class TxtBookStorage implements BookStorage {
     // ---------------------------------------------------------------
 
     /**
-     * Зчитує книги з текстового файлу.
-     * Пропускає порожні рядки, коментарі та некоректні записи.
+     * Зчитує рядки з файлу та заповнює бібліотеку через
+     * {@link Library#addNewBook(Book, int)}.
+     *
+     * @param library бібліотека для заповнення
      */
     @Override
     public void load(Library library) {
@@ -84,12 +86,13 @@ public class TxtBookStorage implements BookStorage {
     }
 
     /**
-     * Розбирає один рядок файлу та повертає відповідний об'єкт {@link Book}.
+     * Розбирає один рядок файлу та викликає {@link Library#addNewBook}.
      * При помилці повертає {@code null} і виводить попередження.
      *
      * @param line       рядок файлу
      * @param lineNumber номер рядка (для діагностики)
-     * @return об'єкт Book або {@code null} при помилці
+     * @param library    бібліотека; колекція, що зберігає книги
+     * @return {@code true} якщо рядок успішно оброблений
      */
     private boolean parseLine(String line, int lineNumber, Library library) {
         String[] parts = line.split(DELIMITER, -1);
@@ -121,7 +124,7 @@ public class TxtBookStorage implements BookStorage {
         }
     }
 
-    /** Розбирає базову книгу (7 полів: type + 6). */
+    /** Розбирає базову книгу (8 полів: quantity + type + 6). */
     private boolean parseBook(String[] parts, int lineNumber, Library library) {
         checkLength(parts, 8, lineNumber, "BOOK");
         Book book = new Book(
@@ -132,7 +135,7 @@ public class TxtBookStorage implements BookStorage {
         return true;
     }
 
-    /** Розбирає EBook (10 полів). */
+    /** Розбирає EBook (11 полів). */
     private Boolean parseEBook(String[] parts, int lineNumber, Library library) {
         checkLength(parts, 11, lineNumber, "EBOOK");
         EBook book = new EBook(
@@ -144,7 +147,7 @@ public class TxtBookStorage implements BookStorage {
         return true;
     }
 
-    /** Розбирає AudioBook (10 полів). */
+    /** Розбирає AudioBook (11 полів). */
     private boolean parseAudioBook(String[] parts, int lineNumber, Library library) {
         checkLength(parts, 11, lineNumber, "AUDIOBOOK");
         AudioBook book = new AudioBook(
@@ -156,7 +159,7 @@ public class TxtBookStorage implements BookStorage {
         return true;
     }
 
-    /** Розбирає PaperBook (10 полів). */
+    /** Розбирає PaperBook (11 полів). */
     private boolean parsePaperBook(String[] parts, int lineNumber, Library library) {
         checkLength(parts, 11, lineNumber, "PAPERBOOK");
         PaperBook book = new PaperBook(
@@ -169,7 +172,7 @@ public class TxtBookStorage implements BookStorage {
         return true;
     }
 
-    /** Розбирає RareBook (13 полів). */
+    /** Розбирає RareBook (14 полів). */
     private boolean parseRareBook(String[] parts, int lineNumber, Library library) {
         checkLength(parts, 14, lineNumber, "RAREBOOK");
         RareBook book = new RareBook(
@@ -189,7 +192,9 @@ public class TxtBookStorage implements BookStorage {
     // ---------------------------------------------------------------
 
     /**
-     * Записує всі книги до текстового файлу у pipe-delimited форматі.
+     * Записує всі записи бібліотеки до текстового файлу у pipe-delimited форматі.
+     *
+     * @param library бібліотека для збереження
      */
     @Override
     public void save(Library library) {
@@ -218,10 +223,11 @@ public class TxtBookStorage implements BookStorage {
     }
 
     /**
-     * Серіалізує один об'єкт {@link Book} у pipe-delimited рядок.
+     * Серіалізує один запис у pipe-delimited рядок.
      *
-     * @param book об'єкт для серіалізації
-     * @return рядок у форматі файлу
+     * @param book     книга
+     * @param quantity кількість примірників
+     * @return рядок файлу
      */
     private String serialize(Book book, int  quantity) {
         // Спільні поля базового класу
