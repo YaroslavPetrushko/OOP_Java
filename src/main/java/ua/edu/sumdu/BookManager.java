@@ -191,6 +191,8 @@ public class BookManager {
             System.out.println("  1. By author");
             System.out.println("  2. By genre");
             System.out.println("  3. By price range");
+            System.out.println("  4. By book type");
+            System.out.println("  5. By year");
             System.out.println("  0. Back to main menu");
             System.out.print("Criterion: ");
 
@@ -201,6 +203,8 @@ public class BookManager {
                 case 1 -> searchByAuthor();
                 case 2 -> searchByGenre();
                 case 3 -> searchByPriceRange();
+                case 4 -> searchByType();
+                case 5 -> searchByYear();
                 case 0 -> System.out.println("  Cancelled.\n");
                 default -> System.out.println("  [!] Unknown criterion.\n");
             }
@@ -246,6 +250,31 @@ public class BookManager {
                         + " .. $" + String.format("%.2f", maxPrice) + "]");
     }
 
+    // Пошук за типом книги
+    private void searchByType(){
+        ArrayList<Book> result = new ArrayList<>();
+        String type = readNonEmptyString("Type: ");
+        for (Book book : books) {
+            if (book.getClass().getSimpleName().contains(type)) {
+                result.add(book);
+            }
+        }
+        printSearchResult(result,"book type contains \"" + type + "\"");
+    }
+
+    // Пошук за роком публікації
+    private void searchByYear(){
+        ArrayList<Book> result = new ArrayList<>();
+        String year = readNonEmptyString("Year: ");
+        for (Book book : books) {
+            if(book.getYear()==Integer.parseInt(year)){
+                result.add(book);
+            }
+        }
+        printSearchResult(result,"year contains \"" + year + "\"");
+    }
+
+    // Виведення результатів пошуку
     private void printSearchResult(ArrayList<Book> result, String criterion) {
         System.out.println("--- Search results [" + criterion + "] ---");
         if (result.isEmpty()) {
