@@ -1,4 +1,6 @@
 target/
+db.properties
+app.properties
 *.class
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
