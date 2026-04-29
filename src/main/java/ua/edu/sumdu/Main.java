@@ -1,5 +1,10 @@
 package ua.edu.sumdu;
 
+import ua.edu.sumdu.db.DatabaseManager;
+
+import java.io.IOException;
+import java.sql.SQLException;
+
 /**
  * Точка входу в програму «Book Manager».
  *
@@ -15,6 +20,29 @@ public class Main {
      * @param args аргументи командного рядка (не використовуються)
      */
     public static void main(String[] args) {
-        new BookManager().run();
+        DatabaseManager db = null;
+
+        if (args.length > 0) {
+            System.out.println("[DB] Loading config: " + args[0]);
+            try {
+                db = new DatabaseManager(args[0]);
+            } catch (IOException e) {
+                System.out.println("[DB] Cannot read config file: " + e.getMessage());
+                System.out.println("[DB] Continuing without database.");
+            } catch (SQLException e) {
+                System.out.println("[DB] Connection failed: " + e.getMessage());
+                System.out.println("[DB] Continuing without database.");
+            }
+        } else {
+            System.out.println("[DB] No config file provided — running without database.");
+        }
+
+        try {
+            new BookManager(db).run();
+        } finally {
+            if (db != null) {
+                db.close();
+            }
+        }
     }
 }

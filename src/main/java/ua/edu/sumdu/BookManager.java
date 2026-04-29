@@ -1,6 +1,7 @@
 package ua.edu.sumdu;
 
 import ua.edu.sumdu.model.*;
+import ua.edu.sumdu.db.DatabaseManager;
 import ua.edu.sumdu.storage.BookStorage;
 import ua.edu.sumdu.storage.TxtBookStorage;
 import ua.edu.sumdu.storage.JsonBookStorage;
@@ -63,6 +64,9 @@ public class BookManager {
     /** Спільний Scanner для всієї програми. */
     private final Scanner scanner;
 
+    /** Менеджер бази даних. */
+    private final DatabaseManager db;
+
     // ---------------------------------------------------------------
     // Конструктор
     // ---------------------------------------------------------------
@@ -71,11 +75,12 @@ public class BookManager {
      * Ініціалізує контролер: створює бібліотеку з іменем/адресою за замовчуванням
      * та обидва сховища.
      */
-    public BookManager() {
+    public BookManager(DatabaseManager db) {
         this.library     = new Library("City Library", "Main St. 1");
         this.txtStorage  = new TxtBookStorage(TXT_FILE);
         this.jsonStorage = new JsonBookStorage(JSON_FILE);
         this.scanner     = new Scanner(System.in);
+        this.db          = db;
     }
 
     // ---------------------------------------------------------------
@@ -304,7 +309,9 @@ public class BookManager {
             int    pages    = readInt("Pages:  ");
             int    quantity = readInt("Quantity:  ");
 
-            library.addNewBook(new Book(title, author, year, price, genre, pages), quantity);
+            Book book = new Book(title, author, year, price, genre, pages);
+            library.addNewBook(book, quantity);
+            persistToDatabase(book, quantity);
             System.out.println("  [OK] Book added. Library size: " + library.getEntryCount() + "\n");
 
         } catch (InvalidBookDataException e) {
@@ -329,8 +336,10 @@ public class BookManager {
             String downloadUrl  = readNonEmptyString("Download URL: ");
             int    quantity    = readInt("Quantity:  ");
 
-            library.addNewBook(new EBook(title, author, year, price, genre, pages,
-                    fileFormat, fileSizeMB, downloadUrl), quantity);
+            EBook book = new EBook(title, author, year, price, genre, pages,
+                    fileFormat, fileSizeMB, downloadUrl);
+            library.addNewBook(book, quantity);
+            persistToDatabase(book, quantity);
             System.out.println("  [OK] EBook added. Library size: " + library.getEntryCount() + "\n");
 
         } catch (InvalidBookDataException e) {
@@ -355,8 +364,10 @@ public class BookManager {
             String audioFormat      = readNonEmptyString("Audio format (MP3/AAC/FLAC): ");
             int    quantity        = readInt("Quantity:  ");
 
-            library.addNewBook(new AudioBook(title, author, year, price, genre, pages,
-                    narrator, durationMinutes, audioFormat), quantity);
+            AudioBook book = new AudioBook(title, author, year, price, genre, pages,
+                    narrator, durationMinutes, audioFormat);
+            library.addNewBook(book, quantity);
+            persistToDatabase(book, quantity);
             System.out.println("  [OK] AudioBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
@@ -380,8 +391,10 @@ public class BookManager {
             double weightGrams = readDouble("Weight (g): ");
             int    quantity    = readInt("Quantity:  ");
 
-            library.addNewBook(new PaperBook(title, author, year, price, genre, pages,
-                    publisher, edition, weightGrams), quantity);
+            PaperBook book = new PaperBook(title, author, year, price, genre, pages,
+                    publisher, edition, weightGrams);
+            library.addNewBook(book, quantity);
+            persistToDatabase(book, quantity);
             System.out.println("  [OK] PaperBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
@@ -408,9 +421,10 @@ public class BookManager {
             int           acquisitionYear   = readInt("Acquisition year:     ");
             int           quantity          = readInt("Quantity:  ");
 
-            library.addNewBook(new RareBook(title, author, year, price, genre, pages,
-                    publisher, edition, weightGrams,
-                    condition, estimatedValueUSD, acquisitionYear), quantity);
+            RareBook book = new RareBook(title, author, year, price, genre, pages,
+                    publisher, edition, weightGrams, condition, estimatedValueUSD, acquisitionYear);
+            library.addNewBook(book, quantity);
+            persistToDatabase(book, quantity);
             System.out.println("  [OK] RareBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
             System.out.println("  [!] " + e.getMessage() + "\n");
@@ -532,6 +546,19 @@ public class BookManager {
             System.out.println("  [!] Enter a number from 1 to " + values.length + ".");
         }
     }
+
+    // Допоміжний метод взаємодії з БД
+    private void persistToDatabase(Book book, int quantity) {
+        if (db == null || !db.isConnected()) {
+            return;
+        }
+        try {
+            db.insertBook(book, quantity);
+        } catch (java.sql.SQLException e) {
+            System.out.println("  [DB] Failed to insert record: " + e.getMessage());
+        }
+    }
+
 
 }
 
