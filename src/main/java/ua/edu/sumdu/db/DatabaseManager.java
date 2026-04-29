@@ -6,11 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.IOException;
 import java.io.Reader;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.Properties;
 
 /**
@@ -36,6 +32,14 @@ public class DatabaseManager {
                     " publisher, edition, weight_grams, " +
                     " condition, estimated_value_usd, acquisition_year) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    /** SQL-запит для пошуку ідентичної книги*/
+    private static final String CHECK_SQL =
+            "SELECT id FROM books WHERE type = ? AND title = ? AND author = ? AND year = ?";
+
+    /** SQL-запит для оновлення книги.*/
+    private static final String UPDATE_SQL=
+            "UPDATE books SET quantity = quantity + ? WHERE id = ?";
 
     /** З'єднання з базою даних. */
     private final Connection connection;
@@ -83,11 +87,40 @@ public class DatabaseManager {
      * @throws SQLException при помилці виконання запиту
      */
     public void insertBook(Book book, int quantity) throws SQLException {
-        PreparedStatement stmt = null;
-        try {
-            stmt = connection.prepareStatement(INSERT_SQL);
+        String type = resolveType(book);
+        int existingId = -1;
 
-            String type = resolveType(book);
+        // 1. Перевіряємо, чи існує вже така книга в базі
+        String checkSql = CHECK_SQL;
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkSql)) {
+            checkStmt.setString(1, type);
+            checkStmt.setString(2, book.getTitle());
+            checkStmt.setString(3, book.getAuthor());
+            checkStmt.setInt(4, book.getYear());
+
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next()) {
+                    existingId = rs.getInt("id"); // Отримуємо ID існуючої книги
+                }
+            }
+        }
+
+        // 2. Якщо книга існує -> Оновлюємо quantity
+        if (existingId != -1) {
+            String updateSql = UPDATE_SQL;
+            try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                updateStmt.setInt(1, quantity);
+                updateStmt.setInt(2, existingId);
+                updateStmt.executeUpdate();
+
+                System.out.println("  [DB] Updated quantity for " + type
+                        + " \"" + book.getTitle() + "\" (added " + quantity + ").");
+            }
+            return;
+        }
+
+        // 3. Якщо книги немає -> Робимо стандартний INSERT (ваш старий код)
+        try (PreparedStatement stmt = connection.prepareStatement(INSERT_SQL)) {
 
             // --- Загальні поля (позиції 1–8) ---
             stmt.setString(1, type);
@@ -148,13 +181,8 @@ public class DatabaseManager {
             }
 
             stmt.executeUpdate();
-            System.out.println("  [DB] Inserted " + type
+            System.out.println("  [DB] Inserted new" + type
                     + " \"" + book.getTitle() + "\" (qty=" + quantity + ").");
-
-        } finally {
-            if (stmt != null) {
-                try { stmt.close(); } catch (SQLException ignored) {}
-            }
         }
     }
 
