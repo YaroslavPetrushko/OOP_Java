@@ -64,7 +64,7 @@ public class BookManager {
     /** Спільний Scanner для всієї програми. */
     private final Scanner scanner;
 
-    /** Менеджер бази даних. */
+    /** Менеджер бази даних; {@code null} якщо БД не налаштована. */
     private final DatabaseManager db;
 
     // ---------------------------------------------------------------
@@ -74,6 +74,8 @@ public class BookManager {
     /**
      * Ініціалізує контролер: створює бібліотеку з іменем/адресою за замовчуванням
      * та обидва сховища.
+     *
+     * @param db менеджер БД або {@code null}, якщо БД не використовується
      */
     public BookManager(DatabaseManager db) {
         this.library     = new Library("City Library", "Main St. 1");
@@ -125,8 +127,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v7.0            ║");
-        System.out.println("║ Library | Aggregation | TXT+JSON storage ║");
+        System.out.println("║            BOOK MANAGER  v7.5            ║");
+        System.out.println("║    Library | TXT+JSON storage | JDBC     ║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -547,7 +549,13 @@ public class BookManager {
         }
     }
 
-    // Допоміжний метод взаємодії з БД
+    /**
+     * Виконує INSERT до БД, якщо з'єднання активне.
+     * Помилка не перериває роботу програми — лише виводиться у консоль.
+     *
+     * @param book     книга для збереження
+     * @param quantity кількість примірників
+     */
     private void persistToDatabase(Book book, int quantity) {
         if (db == null || !db.isConnected()) {
             return;

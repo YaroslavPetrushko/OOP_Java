@@ -11,13 +11,24 @@ import java.sql.SQLException;
  * <p>Клас є виключно драйвером: створює {@link BookManager} та
  * передає йому управління. Вся бізнес-логіка, введення/виведення
  * та файлові операції реалізовані у {@link BookManager}.</p>
+ *
+ * <p>Якщо передано аргумент командного рядка — трактується як шлях до
+ * конфігураційного файлу БД ({@code db.properties}) і ініціалізується
+ * {@link DatabaseManager}. Без аргументу програма працює без БД.</p>
+ *
+ * <p>Приклад запуску з БД:</p>
+ * <pre>
+ *   java -cp ... ua.edu.sumdu.Main db.properties
+ *   java -jar pr12-7.0-DB.jar db.properties
+ * </pre>
+ *
  */
 public class Main {
 
     /**
      * Запускає програму.
      *
-     * @param args аргументи командного рядка (не використовуються)
+     * @param args {@code args[0]} — необов'язковий шлях до конфіг-файлу БД
      */
     public static void main(String[] args) {
         DatabaseManager db = null;

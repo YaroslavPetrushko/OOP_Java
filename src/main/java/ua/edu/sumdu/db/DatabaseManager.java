@@ -14,7 +14,16 @@ import java.sql.Types;
 import java.util.Properties;
 
 /**
- * Менеджер бази даних для збереження об'єктів Book.
+ * Менеджер бази даних для збереження об'єктів ієрархії {@link Book}.
+ *
+ * <p>Використовує стратегію «single-table inheritance»: усі підкласи
+ * зберігаються в одній таблиці {@code books}. Тип об'єкта визначається
+ * полем {@code type} (дискримінатор).</p>
+ *
+ * <p>Параметри підключення зчитуються з конфігураційного файлу,
+ * шлях до якого передається через аргументи командного рядка.</p>
+ *
+ * <p>Усі запити виконуються виключно через {@link PreparedStatement}.</p>
  */
 public class DatabaseManager {
 
@@ -35,6 +44,14 @@ public class DatabaseManager {
     // Конструктор
     // ---------------------------------------------------------------
 
+    /**
+     * Ініціалізує менеджер: зчитує параметри підключення з файлу та
+     * відкриває з'єднання з PostgreSQL.
+     *
+     * @param configPath шлях до файлу {@code db.properties}
+     * @throws IOException  якщо файл не знайдено або не вдалося прочитати
+     * @throws SQLException якщо підключення до БД не вдалося встановити
+     */
     public DatabaseManager(String configPath) throws IOException, SQLException {
         Properties props = loadProperties(configPath);
 
@@ -56,7 +73,14 @@ public class DatabaseManager {
     // ---------------------------------------------------------------
 
     /**
-     * INSERT у таблицю books
+     * Виконує INSERT у таблицю {@code books} для вказаного об'єкта.
+     *
+     * <p>Тип об'єкта визначається автоматично через {@code instanceof},
+     * поля, що не стосуються конкретного підкласу, заповнюються як {@code NULL}.</p>
+     *
+     * @param book     книга для збереження; не може бути {@code null}
+     * @param quantity кількість примірників
+     * @throws SQLException при помилці виконання запиту
      */
     public void insertBook(Book book, int quantity) throws SQLException {
         PreparedStatement stmt = null;
@@ -134,6 +158,10 @@ public class DatabaseManager {
         }
     }
 
+    /**
+     * Закриває з'єднання з базою даних.
+     * Викликається при завершенні програми.
+     */
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -145,6 +173,11 @@ public class DatabaseManager {
         }
     }
 
+    /**
+     * Перевіряє, чи є активне з'єднання з БД.
+     *
+     * @return {@code true} якщо з'єднання відкрите
+     */
     public boolean isConnected() {
         try {
             return connection != null && !connection.isClosed();
@@ -154,9 +187,16 @@ public class DatabaseManager {
     }
 
     // ---------------------------------------------------------------
-    // Допоміжні методи
+    // Приватні допоміжні методи
     // ---------------------------------------------------------------
 
+    /**
+     * Зчитує {@link Properties} з файлу за вказаним шляхом.
+     *
+     * @param path шлях до файлу
+     * @return завантажені властивості
+     * @throws IOException при помилці читання
+     */
     private Properties loadProperties(String path) throws IOException {
         Properties props = new Properties();
         try (Reader reader = Files.newBufferedReader(Paths.get(path))) {
@@ -165,6 +205,16 @@ public class DatabaseManager {
         return props;
     }
 
+    /**
+     * Визначає рядковий дискримінатор типу для поля {@code type} у таблиці.
+     *
+     * <p>Перевірка виконується у порядку від найспецифічнішого до базового,
+     * щоб {@code RareBook} не потрапив до гілки {@code PaperBook}.</p>
+     *
+     * @param book об'єкт книги
+     * @return рядок типу: {@code "RAREBOOK"}, {@code "PAPERBOOK"},
+     *         {@code "EBOOK"}, {@code "AUDIOBOOK"} або {@code "BOOK"}
+     */
     private String resolveType(Book book) {
         if (book instanceof RareBook)  return "RAREBOOK";
         if (book instanceof PaperBook) return "PAPERBOOK";
