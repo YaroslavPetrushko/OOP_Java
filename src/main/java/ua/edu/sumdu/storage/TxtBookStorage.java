@@ -7,22 +7,21 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * Реалізація {@link BookStorage} для текстового файлу у форматі pipe-delimited.
  *
- * <h2>Формат рядка (поля розділено символом {@code |}):</h2>
+ * <h2>Формат рядка — поля розділені символом {@code |}, кількість є останнім полем:</h2>
  * <pre>
- * BOOK|title|author|year|price|genre|pages
- * EBOOK|title|author|year|price|genre|pages|fileFormat|fileSizeMB|downloadUrl
- * AUDIOBOOK|title|author|year|price|genre|pages|narrator|durationMinutes|audioFormat
- * PAPERBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams
- * RAREBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams|condition|estimatedValueUSD|acquisitionYear
+ * BOOK|title|author|year|price|genre|pages|quantity
+ * EBOOK|title|author|year|price|genre|pages|fileFormat|fileSizeMB|downloadUrl|quantity
+ * AUDIOBOOK|title|author|year|price|genre|pages|narrator|durationMinutes|audioFormat|quantity
+ * PAPERBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams|quantity
+ * RAREBOOK|title|author|year|price|genre|pages|publisher|edition|weightGrams|condition|estimatedValueUSD|acquisitionYear|quantity
  * </pre>
  *
- * <p>Рядки, що починаються з {@code #}, вважаються коментарями і пропускаються.
- * Некоректні рядки пропускаються з виведенням попередження.</p>
+ * <p>Рядки, що починаються з {@code #}, вважаються коментарями та пропускаються.
+ * Некоректні рядки також пропускаються з виведенням попередження.</p>
  *
  * <p><b>Обмеження:</b> рядкові поля не повинні містити символ {@code |}.</p>
  */
@@ -51,14 +50,14 @@ public class TxtBookStorage implements BookStorage {
     // ---------------------------------------------------------------
 
     /**
-     * Зчитує книги з текстового файлу.
-     * Пропускає порожні рядки, коментарі та некоректні записи.
+     * Зчитує рядки з файлу та заповнює бібліотеку через
+     * {@link Library#addNewBook(Book, int)}.
      *
-     * @return колекція книг (порожня, якщо файл відсутній або пошкоджений)
+     * @param library бібліотека для заповнення
      */
     @Override
-    public ArrayList<Book> load() {
-        ArrayList<Book> books = new ArrayList<Book>();
+    public void load(Library library) {
+        int loaded = 0;
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(filePath));
@@ -71,105 +70,121 @@ public class TxtBookStorage implements BookStorage {
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
-                Book book = parseLine(line, lineNumber);
-                if (book != null) {
-                    books.add(book);
+                if (parseLine(line, lineNumber, library)) {
+                    loaded++;
                 }
             }
-            System.out.println("  [TXT] Loaded " + books.size() + " book(s) from " + filePath);
+            System.out.println("  [TXT] Loaded " + loaded + " record(s) from " + filePath);
         } catch (IOException e) {
-            System.out.println("  [TXT] File not found or unreadable: " + filePath
-                    + " — starting with empty collection.");
+            System.out.println("  [TXT] File not found: " + filePath
+                    + " — starting with empty library.");
         } finally {
             if (reader != null) {
                 try { reader.close(); } catch (IOException ignored) {}
             }
         }
-        return books;
     }
 
     /**
-     * Розбирає один рядок файлу та повертає відповідний об'єкт {@link Book}.
+     * Розбирає один рядок файлу та викликає {@link Library#addNewBook}.
      * При помилці повертає {@code null} і виводить попередження.
      *
      * @param line       рядок файлу
      * @param lineNumber номер рядка (для діагностики)
-     * @return об'єкт Book або {@code null} при помилці
+     * @param library    бібліотека; колекція, що зберігає книги
+     * @return {@code true} якщо рядок успішно оброблений
      */
-    private Book parseLine(String line, int lineNumber) {
+    private boolean parseLine(String line, int lineNumber, Library library) {
         String[] parts = line.split(DELIMITER, -1);
         if (parts.length < 1) {
             warn(lineNumber, "empty record");
-            return null;
+            return false;
         }
 
         String type = parts[0].trim().toUpperCase();
         try {
             switch (type) {
                 case "BOOK":
-                    return parseBook(parts, lineNumber);
+                    return parseBook(parts, lineNumber, library);
                 case "EBOOK":
-                    return parseEBook(parts, lineNumber);
+                    return parseEBook(parts, lineNumber, library);
                 case "AUDIOBOOK":
-                    return parseAudioBook(parts, lineNumber);
+                    return parseAudioBook(parts, lineNumber, library);
                 case "PAPERBOOK":
-                    return parsePaperBook(parts, lineNumber);
+                    return parsePaperBook(parts, lineNumber, library);
                 case "RAREBOOK":
-                    return parseRareBook(parts, lineNumber);
+                    return parseRareBook(parts, lineNumber, library);
                 default:
                     warn(lineNumber, "unknown type: " + type);
-                    return null;
+                    return false;
             }
         } catch (InvalidBookDataException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
             warn(lineNumber, e.getMessage());
-            return null;
+            return false;
         }
     }
 
-    /** Розбирає базову книгу (7 полів: type + 6). */
-    private Book parseBook(String[] p, int ln) {
-        checkLength(p, 7, ln, "BOOK");
-        return new Book(p[1].trim(), p[2].trim(),
-                parseInt(p[3], ln), parseDouble(p[4], ln),
-                Genre.valueOf(p[5].trim()), parseInt(p[6], ln));
+    /** Розбирає базову книгу (8 полів: quantity + type + 6). */
+    private boolean parseBook(String[] parts, int lineNumber, Library library) {
+        checkLength(parts, 8, lineNumber, "BOOK");
+        Book book = new Book(
+                parts[1].trim(), parts[2].trim(),
+                parseInt(parts[3], lineNumber), parseDouble(parts[4], lineNumber),
+                Genre.valueOf(parts[5].trim()), parseInt(parts[6], lineNumber));
+        library.addNewBook(book, parseInt(parts[7], lineNumber));
+        return true;
     }
 
-    /** Розбирає EBook (10 полів). */
-    private EBook parseEBook(String[] p, int ln) {
-        checkLength(p, 10, ln, "EBOOK");
-        return new EBook(p[1].trim(), p[2].trim(),
-                parseInt(p[3], ln), parseDouble(p[4], ln),
-                Genre.valueOf(p[5].trim()), parseInt(p[6], ln),
-                p[7].trim(), parseDouble(p[8], ln), p[9].trim());
+    /** Розбирає EBook (11 полів). */
+    private Boolean parseEBook(String[] parts, int lineNumber, Library library) {
+        checkLength(parts, 11, lineNumber, "EBOOK");
+        EBook book = new EBook(
+                parts[1].trim(), parts[2].trim(),
+                parseInt(parts[3], lineNumber), parseDouble(parts[4], lineNumber),
+                Genre.valueOf(parts[5].trim()), parseInt(parts[6], lineNumber),
+                parts[7].trim(), parseDouble(parts[8], lineNumber), parts[9].trim());
+        library.addNewBook(book, parseInt(parts[10], lineNumber));
+        return true;
     }
 
-    /** Розбирає AudioBook (10 полів). */
-    private AudioBook parseAudioBook(String[] p, int ln) {
-        checkLength(p, 10, ln, "AUDIOBOOK");
-        return new AudioBook(p[1].trim(), p[2].trim(),
-                parseInt(p[3], ln), parseDouble(p[4], ln),
-                Genre.valueOf(p[5].trim()), parseInt(p[6], ln),
-                p[7].trim(), parseInt(p[8], ln), p[9].trim());
+    /** Розбирає AudioBook (11 полів). */
+    private boolean parseAudioBook(String[] parts, int lineNumber, Library library) {
+        checkLength(parts, 11, lineNumber, "AUDIOBOOK");
+        AudioBook book = new AudioBook(
+                parts[1].trim(), parts[2].trim(),
+                parseInt(parts[3], lineNumber), parseDouble(parts[4], lineNumber),
+                Genre.valueOf(parts[5].trim()), parseInt(parts[6], lineNumber),
+                parts[7].trim(), parseInt(parts[8], lineNumber), parts[9].trim());
+        library.addNewBook(book, parseInt(parts[10], lineNumber));
+        return true;
     }
 
-    /** Розбирає PaperBook (10 полів). */
-    private PaperBook parsePaperBook(String[] p, int ln) {
-        checkLength(p, 10, ln, "PAPERBOOK");
-        return new PaperBook(p[1].trim(), p[2].trim(),
-                parseInt(p[3], ln), parseDouble(p[4], ln),
-                Genre.valueOf(p[5].trim()), parseInt(p[6], ln),
-                p[7].trim(), parseInt(p[8], ln), parseDouble(p[9], ln));
+    /** Розбирає PaperBook (11 полів). */
+    private boolean parsePaperBook(String[] parts, int lineNumber, Library library) {
+        checkLength(parts, 11, lineNumber, "PAPERBOOK");
+        PaperBook book = new PaperBook(
+                parts[1].trim(), parts[2].trim(),
+                parseInt(parts[3], lineNumber), parseDouble(parts[4], lineNumber),
+                Genre.valueOf(parts[5].trim()), parseInt(parts[6], lineNumber),
+                parts[7].trim(), parseInt(parts[8], lineNumber),
+                parseDouble(parts[9], lineNumber));
+        library.addNewBook(book, parseInt(parts[10], lineNumber));
+        return true;
     }
 
-    /** Розбирає RareBook (13 полів). */
-    private RareBook parseRareBook(String[] p, int ln) {
-        checkLength(p, 13, ln, "RAREBOOK");
-        return new RareBook(p[1].trim(), p[2].trim(),
-                parseInt(p[3], ln), parseDouble(p[4], ln),
-                Genre.valueOf(p[5].trim()), parseInt(p[6], ln),
-                p[7].trim(), parseInt(p[8], ln), parseDouble(p[9], ln),
-                BookCondition.valueOf(p[10].trim()),
-                parseDouble(p[11], ln), parseInt(p[12], ln));
+    /** Розбирає RareBook (14 полів). */
+    private boolean parseRareBook(String[] parts, int lineNumber, Library library) {
+        checkLength(parts, 14, lineNumber, "RAREBOOK");
+        RareBook book = new RareBook(
+                parts[1].trim(), parts[2].trim(),
+                parseInt(parts[3], lineNumber), parseDouble(parts[4], lineNumber),
+                Genre.valueOf(parts[5].trim()), parseInt(parts[6], lineNumber),
+                parts[7].trim(), parseInt(parts[8], lineNumber),
+                parseDouble(parts[9], lineNumber),
+                BookCondition.valueOf(parts[10].trim()),
+                parseDouble(parts[11], lineNumber), parseInt(parts[12], lineNumber));
+        library.addNewBook(book, parseInt(parts[13], lineNumber));
+        return true;
     }
 
     // ---------------------------------------------------------------
@@ -177,23 +192,27 @@ public class TxtBookStorage implements BookStorage {
     // ---------------------------------------------------------------
 
     /**
-     * Записує всі книги до текстового файлу у pipe-delimited форматі.
+     * Записує всі записи бібліотеки до текстового файлу у pipe-delimited форматі.
      *
-     * @param books колекція для збереження
+     * @param library бібліотека для збереження
      */
     @Override
-    public void save(ArrayList<Book> books) {
+    public void save(Library library) {
         BufferedWriter writer = null;
         try {
             writer = new BufferedWriter(new FileWriter(filePath));
-            writer.write("# Book Manager — auto-generated, do not edit manually");
+            writer.write("# Book Manager — input.exe - do not edit manually");
+            writer.newLine();
+            writer.write("# Library: " + library.getName()
+                    + " | " + library.getAddress());
             writer.newLine();
 
-            for (int i = 0; i < books.size(); i++) {
-                writer.write(serialize(books.get(i)));
+            for (int i = 0; i < library.getEntryCount(); i++) {
+                BookEntry entry = library.getEntry(i);
+                writer.write(serialize(entry.getBook(), entry.getQuantity()));
                 writer.newLine();
             }
-            System.out.println("  [TXT] Saved " + books.size() + " book(s) to " + filePath);
+            System.out.println("  [TXT] Saved " + library.getEntryCount() + " record(s) to " + filePath);
         } catch (IOException e) {
             System.out.println("  [TXT] Error saving to " + filePath + ": " + e.getMessage());
         } finally {
@@ -204,52 +223,57 @@ public class TxtBookStorage implements BookStorage {
     }
 
     /**
-     * Серіалізує один об'єкт {@link Book} у pipe-delimited рядок.
+     * Серіалізує один запис у pipe-delimited рядок.
      *
-     * @param book об'єкт для серіалізації
-     * @return рядок у форматі файлу
+     * @param book     книга
+     * @param quantity кількість примірників
+     * @return рядок файлу
      */
-    private String serialize(Book book) {
+    private String serialize(Book book, int  quantity) {
         // Спільні поля базового класу
         String base = book.getTitle() + WRITE_DELIMITER
                 + book.getAuthor() + WRITE_DELIMITER
                 + book.getYear() + WRITE_DELIMITER
                 + book.getPrice() + WRITE_DELIMITER
                 + book.getGenre().name() + WRITE_DELIMITER
-                + book.getPages();
+                + book.getPages() + WRITE_DELIMITER;
 
         if (book instanceof RareBook) {
             RareBook rb = (RareBook) book;
             return "RAREBOOK" + WRITE_DELIMITER + base
-                    + WRITE_DELIMITER + rb.getPublisher()
-                    + WRITE_DELIMITER + rb.getEdition()
-                    + WRITE_DELIMITER + rb.getWeightGrams()
-                    + WRITE_DELIMITER + rb.getCondition().name()
-                    + WRITE_DELIMITER + rb.getEstimatedValueUSD()
-                    + WRITE_DELIMITER + rb.getAcquisitionYear();
+                    + rb.getPublisher() + WRITE_DELIMITER
+                    + rb.getEdition() + WRITE_DELIMITER
+                    + rb.getWeightGrams() + WRITE_DELIMITER
+                    + rb.getCondition().name() + WRITE_DELIMITER
+                    + rb.getEstimatedValueUSD() + WRITE_DELIMITER
+                    + rb.getAcquisitionYear() + WRITE_DELIMITER
+                    + quantity;
         }
         if (book instanceof PaperBook) {
             PaperBook pb = (PaperBook) book;
             return "PAPERBOOK" + WRITE_DELIMITER + base
-                    + WRITE_DELIMITER + pb.getPublisher()
-                    + WRITE_DELIMITER + pb.getEdition()
-                    + WRITE_DELIMITER + pb.getWeightGrams();
+                    + pb.getPublisher() + WRITE_DELIMITER
+                    + pb.getEdition() + WRITE_DELIMITER
+                    + pb.getWeightGrams() + WRITE_DELIMITER
+                    + quantity;
         }
         if (book instanceof EBook) {
             EBook eb = (EBook) book;
             return "EBOOK" + WRITE_DELIMITER + base
-                    + WRITE_DELIMITER + eb.getFileFormat()
-                    + WRITE_DELIMITER + eb.getFileSizeMB()
-                    + WRITE_DELIMITER + eb.getDownloadUrl();
+                    + eb.getFileFormat() + WRITE_DELIMITER
+                    + eb.getFileSizeMB() + WRITE_DELIMITER
+                    + eb.getDownloadUrl() + WRITE_DELIMITER
+                    + quantity;
         }
         if (book instanceof AudioBook) {
             AudioBook ab = (AudioBook) book;
             return "AUDIOBOOK" + WRITE_DELIMITER + base
-                    + WRITE_DELIMITER + ab.getNarrator()
-                    + WRITE_DELIMITER + ab.getDurationMinutes()
-                    + WRITE_DELIMITER + ab.getAudioFormat();
+                    + ab.getNarrator() + WRITE_DELIMITER
+                    + ab.getDurationMinutes() + WRITE_DELIMITER
+                    + ab.getAudioFormat() + WRITE_DELIMITER
+                    + quantity;
         }
-        return "BOOK" + WRITE_DELIMITER + base;
+        return "BOOK" + WRITE_DELIMITER + base + quantity;
     }
 
     // ---------------------------------------------------------------
