@@ -20,7 +20,7 @@ import java.time.Year;
  *   <li>{@code pages}  — кількість сторінок (&gt; 0)</li>
  * </ul>
  */
-public class Book {
+public abstract class Book implements Comparable<Book> {
 
     // ---------------------------------------------------------------
     // Константи
@@ -223,6 +223,14 @@ public class Book {
         this.pages = pages;
     }
 
+    // ---------------------------------------------------------------
+    // Comparable
+    // ---------------------------------------------------------------
+
+    @Override
+    public int compareTo(Book other) {
+        return this.title.compareToIgnoreCase(other.title);
+    }
 
     // ---------------------------------------------------------------
     // Object overrides
