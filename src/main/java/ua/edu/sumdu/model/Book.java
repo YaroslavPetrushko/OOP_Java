@@ -4,11 +4,17 @@ import java.util.Objects;
 import java.time.Year;
 
 /**
- * Базовий клас, що представляє книгу з основними бібліографічними характеристиками.
+ * Абстрактний базовий клас, що представляє книгу з основними бібліографічними
+ * характеристиками.
  *
- * <p>Є спільним батьківським типом для {@link EBook} та {@link PaperBook}.
- * Забезпечує валідацію всіх полів у конструкторі та сетерах;
- * при некоректних даних викидається {@link InvalidBookDataException}.</p>
+ * <p>Є спільним батьківським типом для {@link EBook}, {@link AudioBook}
+ * та {@link PaperBook}. Оголошено {@code abstract} — безпосереднє
+ * створення екземплярів забороняється; слід використовувати конкретні підкласи.</p>
+ *
+ * <p>Реалізує {@link Comparable}{@code <Book>}: природний порядок —
+ * лексикографічний за полем {@code title} (без урахування регістру).
+ * Це дозволяє сортувати будь-яку колекцію об'єктів ієрархії через
+ * {@code Collections.sort()} без додаткових компараторів.</p>
  *
  * <p>Поля:</p>
  * <ul>
@@ -35,10 +41,10 @@ public abstract class Book implements Comparable<Book> {
 
     private String title;
     private String author;
-    private int year;
+    private int    year;
     private double price;
-    private Genre genre;
-    private int pages;
+    private Genre  genre;
+    private int    pages;
 
     // ---------------------------------------------------------------
     // Основний конструктор
@@ -46,6 +52,7 @@ public abstract class Book implements Comparable<Book> {
 
     /**
      * Створює об'єкт {@code Book} із повною перевіркою всіх параметрів.
+     * Викликається з конструкторів конкретних підкласів через {@code super(...)}.
      *
      * @param title     назва книги; не може бути {@code null} або порожнім
      * @param author    ім'я автора; не може бути {@code null} або порожнім
@@ -72,10 +79,6 @@ public abstract class Book implements Comparable<Book> {
     /**
      * Конструктор копіювання — створює незалежну копію переданого об'єкта.
      *
-     * <p>{@code String} є незмінним типом, {@link Genre} — константою enum,
-     * тому поверхневого копіювання полів достатньо для
-     * незалежності двох об'єктів.</p>
-     *
      * @param other джерело для копіювання; не може бути {@code null}
      * @throws InvalidBookDataException якщо {@code other} є {@code null}
      */
@@ -83,12 +86,12 @@ public abstract class Book implements Comparable<Book> {
         if (other == null) {
             throw new InvalidBookDataException("Source book for copying cannot be null.");
         }
-        this.title      = other.title;
-        this.author     = other.author;
-        this.year       = other.year;
-        this.price      = other.price;
-        this.genre      = other.genre;
-        this.pages      = other.pages;
+        this.title  = other.title;
+        this.author = other.author;
+        this.year   = other.year;
+        this.price  = other.price;
+        this.genre  = other.genre;
+        this.pages  = other.pages;
     }
 
     // ---------------------------------------------------------------
@@ -226,7 +229,17 @@ public abstract class Book implements Comparable<Book> {
     // ---------------------------------------------------------------
     // Comparable
     // ---------------------------------------------------------------
-
+    /**
+     * Порівнює цю книгу з іншою за назвою ({@code title})
+     * в лексикографічному порядку без урахування регістру.
+     *
+     * <p>Критерій є стабільним: поле {@code title} присутнє в кожному
+     * об'єкті ієрархії та не може бути порожнім (перевіряється в сетері).</p>
+     *
+     * @param other інша книга для порівняння
+     * @return від'ємне число, нуль або додатне число, якщо ця книга
+     *         лексикографічно менша, рівна або більша за {@code other}
+     */
     @Override
     public int compareTo(Book other) {
         return this.title.compareToIgnoreCase(other.title);
@@ -237,8 +250,8 @@ public abstract class Book implements Comparable<Book> {
     // ---------------------------------------------------------------
 
     /**
-     * Повертає форматований рядок із усіма полями базового об'єкта.
-     * Перевизначається у підкласах для демонстрації поліморфізму.
+     * Повертає форматований рядок із полями базового класу.
+     * Перевизначається у кожному конкретному підкласі.
      *
      * @return рядкове представлення книги
      */
@@ -250,7 +263,7 @@ public abstract class Book implements Comparable<Book> {
     }
 
     /**
-     * Порівнює два об'єкти {@code Book} за всіма полями.
+     * Порівнює два об'єкти за всіма полями базового класу.
      *
      * @param o об'єкт для порівняння
      * @return {@code true}, якщо всі поля рівні

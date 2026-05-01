@@ -142,7 +142,14 @@ public class Library {
         entries.add(new BookEntry(bk, quantity));
     }
 
-    // Повертає копію колекції як новий список
+    /**
+     * Повертає копію внутрішньої колекції у вигляді нового списку.
+     *
+     * <p>Зміни у поверненому списку не впливають на внутрішній стан
+     * бібліотеки. Самі об'єкти {@link BookEntry} передаються за посиланням.</p>
+     *
+     * @return новий {@code ArrayList} з усіма записами бібліотеки
+     */
     public ArrayList<BookEntry> getAllEntries() {
         return new ArrayList<BookEntry>(entries);
     }

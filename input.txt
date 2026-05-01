@@ -1,0 +1,7 @@
+# Book Manager — input.exe - do not edit manually
+# Library: City Library | Main St. 1
+EBOOK|The Hitchhiker's Guide to the Galaxy|Douglas Adams|1979|8.42|SCI_FI|224|EPUB|2.3|example.com/hitchiker|42
+AUDIOBOOK|The Hobbit|J.R.R. Tolkien|1937|15.99|FANTASY|310|Andy Serkis|680|MP3|4
+PAPERBOOK|Sapiens: A Brief History of Humankind|Yuval Noah Harari|2011|18.75|NON_FICTION|443|Harper|1|520.0|10
+RAREBOOK|Pride and Prejudice|Jane Austen|1813|1200.0|FICTION|432|T. Egerton|1|500.0|GOOD|15000.0|2010|1
+EBOOK|Clean Code|Robert C. Martin|2008|39.99|PROGRAMMING|431|PDF|12.1|KeepItSimple.stu/|11

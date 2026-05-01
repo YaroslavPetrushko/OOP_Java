@@ -123,8 +123,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v7.0            ║");
-        System.out.println("║ Library | Aggregation | TXT+JSON storage ║");
+        System.out.println("║            BOOK MANAGER  v8.0            ║");
+        System.out.println("║ Library | Comparable | TXT+JSON storage  ║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -258,6 +258,7 @@ public class BookManager {
 
     // ---------------------------------------------------------------
     // Пункт 2: Створення нової книги
+    // Прибрано Book base
     // ---------------------------------------------------------------
 
     /**
@@ -426,6 +427,18 @@ public class BookManager {
     // Пункт 4: Виведення книг відсортованих за назвою
     // ---------------------------------------------------------------
 
+    /**
+     * Виводить усі записи бібліотеки, відсортовані за назвою книги
+     * (лексикографічно, без урахування регістру).
+     *
+     * <p>Сортування виконується через {@link Collections#sort} —
+     * застосовується природний порядок, визначений у
+     * {@link Book#compareTo(Book)}.</p>
+     *
+     * <p>Якщо бібліотека порожня — виводиться відповідне повідомлення.
+     * Внутрішня колекція {@link Library} не змінюється: сортується
+     * лише локальна копія списку.</p>
+     */
     private void printSortedBooks() {
         System.out.println("\n--- Sorted by title: " + library.getName()
                 + " [" + library.getEntryCount() + " title(s)] ---");
@@ -438,6 +451,9 @@ public class BookManager {
         ArrayList<BookEntry> sorted = library.getAllEntries();
 
         Collections.sort(sorted, Comparator.comparing(BookEntry::getBook));
+
+        // Var with lambda expression
+        //Collections.sort(sorted,(a, b) -> a.getBook().compareTo(b.getBook()));
 
         for (int i = 0; i < sorted.size(); i++) {
             System.out.println("  " + (i + 1) + ". " + sorted.get(i));
