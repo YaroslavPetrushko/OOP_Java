@@ -166,7 +166,7 @@ public class BookManager {
         System.out.println("1. Search book");
         System.out.println("2. Create new book");
         System.out.println("3. Show all books");
-        System.out.println("4. Show books sorted by title");
+        System.out.println("4. Sort books");
         System.out.println("5. Exit");
         System.out.print("Your choice: ");
     }
@@ -554,6 +554,8 @@ public class BookManager {
                 + " [" + entries.size() + " title(s)] ---");
 
         Collections.sort(entries, cmp);
+        // var with list.sort
+        // entries.sort(cmp);
 
         for (int i = 0; i < entries.size(); i++) {
             System.out.println("  " + (i + 1) + ". " + entries.get(i));
