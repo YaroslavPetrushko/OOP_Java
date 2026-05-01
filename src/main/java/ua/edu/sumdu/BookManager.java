@@ -6,6 +6,8 @@ import ua.edu.sumdu.storage.TxtBookStorage;
 import ua.edu.sumdu.storage.JsonBookStorage;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Scanner;
 
 /**
@@ -99,7 +101,8 @@ public class BookManager {
                 case 1 -> searchMenu();
                 case 2 -> createObject();
                 case 3 -> printAllBooks();
-                case 4 -> {
+                case 4 -> printSortedBooks();
+                case 5 -> {
                     saveBooks();
                     System.out.println("Goodbye!");
                     running = false;
@@ -120,8 +123,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v7.0            ║");
-        System.out.println("║ Library | Aggregation | TXT+JSON storage ║");
+        System.out.println("║            BOOK MANAGER  v8.0            ║");
+        System.out.println("║ Library | Comparable | TXT+JSON storage  ║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -163,7 +166,8 @@ public class BookManager {
         System.out.println("1. Search book");
         System.out.println("2. Create new book");
         System.out.println("3. Show all books");
-        System.out.println("4. Exit");
+        System.out.println("4. Show books sorted by title");
+        System.out.println("5. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -254,6 +258,7 @@ public class BookManager {
 
     // ---------------------------------------------------------------
     // Пункт 2: Створення нової книги
+    // Прибрано Book base
     // ---------------------------------------------------------------
 
     /**
@@ -263,11 +268,10 @@ public class BookManager {
      */
     private void createObject() {
         System.out.println("\n--- Select type ---");
-        System.out.println("  1. Book (base)");
-        System.out.println("  2. EBook");
-        System.out.println("  3. Audio Book");
-        System.out.println("  4. Paper Book");
-        System.out.println("  5. Rare Book");
+        System.out.println("  1. EBook");
+        System.out.println("  2. Audio Book");
+        System.out.println("  3. Paper Book");
+        System.out.println("  4. Rare Book");
         System.out.println("  0. Back to main menu");
         System.out.print("Type: ");
 
@@ -275,11 +279,10 @@ public class BookManager {
         System.out.println();
 
         switch (type) {
-            case 1 -> createBook();
-            case 2 -> createEBook();
-            case 3 -> createAudioBook();
-            case 4 -> createPaperBook();
-            case 5 -> createRareBook();
+            case 1 -> createEBook();
+            case 2 -> createAudioBook();
+            case 3 -> createPaperBook();
+            case 4 -> createRareBook();
             case 0 -> System.out.println("  Cancelled.\n");
             default -> System.out.println("  [!] Unknown type. Returning to main menu.\n");
         }
@@ -288,29 +291,6 @@ public class BookManager {
     // ---------------------------------------------------------------
     // Методи створення конкретних книг
     // ---------------------------------------------------------------
-
-    /**
-     * Зчитує дані для базової {@link Book} та додає її до колекції.
-     * При будь-якій помилці введення виводить повідомлення і повертається до меню.
-     */
-    private void createBook() {
-        System.out.println("--- Add new Book ---");
-        try {
-            String title    = readNonEmptyString("Title:  ");
-            String author   = readNonEmptyString("Author: ");
-            int    year     = readInt("Year:   ");
-            double price    = readDouble("Price:  ");
-            Genre genre     = readEnum(Genre.values(), "Genre");
-            int    pages    = readInt("Pages:  ");
-            int    quantity = readInt("Quantity:  ");
-
-            library.addNewBook(new Book(title, author, year, price, genre, pages), quantity);
-            System.out.println("  [OK] Book added. Library size: " + library.getEntryCount() + "\n");
-
-        } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
-        }
-    }
 
     /**
      * Зчитує дані для {@link EBook} та додає її до колекції.
@@ -439,6 +419,44 @@ public class BookManager {
         for (int i = 0; i < library.getEntryCount(); i++) {
             BookEntry entry = library.getEntry(i);
             System.out.println("  " + (i + 1) + ". " + entry);
+        }
+        System.out.println();
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 4: Виведення книг відсортованих за назвою
+    // ---------------------------------------------------------------
+
+    /**
+     * Виводить усі записи бібліотеки, відсортовані за назвою книги
+     * (лексикографічно, без урахування регістру).
+     *
+     * <p>Сортування виконується через {@link Collections#sort} —
+     * застосовується природний порядок, визначений у
+     * {@link Book#compareTo(Book)}.</p>
+     *
+     * <p>Якщо бібліотека порожня — виводиться відповідне повідомлення.
+     * Внутрішня колекція {@link Library} не змінюється: сортується
+     * лише локальна копія списку.</p>
+     */
+    private void printSortedBooks() {
+        System.out.println("\n--- Sorted by title: " + library.getName()
+                + " [" + library.getEntryCount() + " title(s)] ---");
+
+        if (library.getEntryCount() == 0) {
+            System.out.println("  (library is empty)\n");
+            return;
+        }
+
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+
+        Collections.sort(sorted, Comparator.comparing(BookEntry::getBook));
+
+        // Var with lambda expression
+        //Collections.sort(sorted,(a, b) -> a.getBook().compareTo(b.getBook()));
+
+        for (int i = 0; i < sorted.size(); i++) {
+            System.out.println("  " + (i + 1) + ". " + sorted.get(i));
         }
         System.out.println();
     }
