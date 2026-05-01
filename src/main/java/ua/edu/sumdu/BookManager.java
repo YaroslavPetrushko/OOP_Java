@@ -263,11 +263,10 @@ public class BookManager {
      */
     private void createObject() {
         System.out.println("\n--- Select type ---");
-        System.out.println("  1. Book (base)");
-        System.out.println("  2. EBook");
-        System.out.println("  3. Audio Book");
-        System.out.println("  4. Paper Book");
-        System.out.println("  5. Rare Book");
+        System.out.println("  1. EBook");
+        System.out.println("  2. Audio Book");
+        System.out.println("  3. Paper Book");
+        System.out.println("  4. Rare Book");
         System.out.println("  0. Back to main menu");
         System.out.print("Type: ");
 
@@ -275,11 +274,10 @@ public class BookManager {
         System.out.println();
 
         switch (type) {
-            case 1 -> createBook();
-            case 2 -> createEBook();
-            case 3 -> createAudioBook();
-            case 4 -> createPaperBook();
-            case 5 -> createRareBook();
+            case 1 -> createEBook();
+            case 2 -> createAudioBook();
+            case 3 -> createPaperBook();
+            case 4 -> createRareBook();
             case 0 -> System.out.println("  Cancelled.\n");
             default -> System.out.println("  [!] Unknown type. Returning to main menu.\n");
         }
@@ -288,29 +286,6 @@ public class BookManager {
     // ---------------------------------------------------------------
     // Методи створення конкретних книг
     // ---------------------------------------------------------------
-
-    /**
-     * Зчитує дані для базової {@link Book} та додає її до колекції.
-     * При будь-якій помилці введення виводить повідомлення і повертається до меню.
-     */
-    private void createBook() {
-        System.out.println("--- Add new Book ---");
-        try {
-            String title    = readNonEmptyString("Title:  ");
-            String author   = readNonEmptyString("Author: ");
-            int    year     = readInt("Year:   ");
-            double price    = readDouble("Price:  ");
-            Genre genre     = readEnum(Genre.values(), "Genre");
-            int    pages    = readInt("Pages:  ");
-            int    quantity = readInt("Quantity:  ");
-
-            library.addNewBook(new Book(title, author, year, price, genre, pages), quantity);
-            System.out.println("  [OK] Book added. Library size: " + library.getEntryCount() + "\n");
-
-        } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
-        }
-    }
 
     /**
      * Зчитує дані для {@link EBook} та додає її до колекції.
