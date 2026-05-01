@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -582,34 +583,21 @@ class BookTest {
     // ---------------------------------------------------------------
 
     /** Компаратор 1: за назвою (A → Z). */
-    private java.util.Comparator<BookEntry> titleComparator() {
-        return new java.util.Comparator<BookEntry>() {
-            @Override
-            public int compare(BookEntry a, BookEntry b) {
-                return a.getBook().compareTo(b.getBook());
-            }
-        };
+    private Comparator<BookEntry> titleComparator() {
+        return (a, b) -> a.getBook().compareTo(b.getBook());
     }
 
     /** Компаратор 2: за ціною (зростання). */
-    private java.util.Comparator<BookEntry> priceComparator() {
-        return new java.util.Comparator<BookEntry>() {
-            @Override
-            public int compare(BookEntry a, BookEntry b) {
-                return Double.compare(a.getBook().getPrice(), b.getBook().getPrice());
-            }
-        };
+    private Comparator<BookEntry> priceComparator() {
+        return (a, b) -> Double.compare(a.getBook().getPrice(), b.getBook().getPrice());
     }
 
     /** Компаратор 3: за роком (спадання), вторинно за назвою. */
-    private java.util.Comparator<BookEntry> yearComparator() {
-        return new java.util.Comparator<BookEntry>() {
-            @Override
-            public int compare(BookEntry a, BookEntry b) {
-                int diff = b.getBook().getYear() - a.getBook().getYear();
-                if (diff != 0) return diff;
-                return a.getBook().compareTo(b.getBook());
-            }
+    private Comparator<BookEntry> yearComparator() {
+        return (a, b) -> {
+            int diff = b.getBook().getYear() - a.getBook().getYear();
+            if (diff != 0) return diff;
+            return a.getBook().compareTo(b.getBook());
         };
     }
 
@@ -736,5 +724,55 @@ class BookTest {
         Collections.sort(sorted, priceComparator());
 
         assertEquals(firstBefore, library.getEntry(0).getBook().getTitle());
+    }
+
+    // ---------------------------------------------------------------
+    // reorderEntries
+    // ---------------------------------------------------------------
+
+    @Test
+    void reorderEntries_reversesOrder() {
+        ArrayList<BookEntry> reversed = library.getAllEntries();
+        Collections.sort(reversed, (a, b) -> b.getBook().compareTo(a.getBook()));
+
+        String expectedFirst = reversed.get(0).getBook().getTitle();
+        library.reorderEntries(reversed);
+
+        assertEquals(expectedFirst, library.getEntry(0).getBook().getTitle());
+    }
+
+    @Test
+    void reorderEntries_persistsAfterSort() {
+        // Сортуємо за ціною і зберігаємо
+        ArrayList<BookEntry> byPrice = library.getAllEntries();
+        Collections.sort(byPrice, (a, b) ->
+                Double.compare(a.getBook().getPrice(), b.getBook().getPrice()));
+
+        library.reorderEntries(byPrice);
+
+        // Перевіряємо, що перший елемент — найдешевший
+        double firstPrice = library.getEntry(0).getBook().getPrice();
+        for (int i = 1; i < library.getEntryCount(); i++) {
+            assertTrue(firstPrice <= library.getEntry(i).getBook().getPrice());
+        }
+    }
+
+    @Test
+    void reorderEntries_sizeMismatch_throws() {
+        ArrayList<BookEntry> tooShort = new ArrayList<BookEntry>();
+        tooShort.add(library.getEntry(0));
+
+        assertThrows(InvalidBookDataException.class,
+                () -> library.reorderEntries(tooShort));
+    }
+
+    @Test
+    void reorderEntries_doesNotChangeTotalCount() {
+        int before = library.getEntryCount();
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+        Collections.sort(sorted, (a, b) -> a.getBook().compareTo(b.getBook()));
+        library.reorderEntries(sorted);
+
+        assertEquals(before, library.getEntryCount());
     }
 }

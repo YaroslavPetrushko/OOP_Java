@@ -154,7 +154,19 @@ public class Library {
         return new ArrayList<BookEntry>(entries);
     }
 
-    // Метод для певпорядкування списку
+    /**
+     * Метод для перевпорядкування списку
+     * Замінює поточний порядок записів у колекції на вказаний.
+     *
+     * <p>Використовується після сортування, якщо користувач підтверджує
+     * збереження нового порядку. Вміст колекції не змінюється —
+     * лише переставляються посилання на існуючі {@link BookEntry}.</p>
+     *
+     * @param newOrder новий порядок записів; має містити рівно ті самі
+     *                 елементи, що й поточна колекція
+     * @throws InvalidBookDataException якщо розміри не збігаються
+     */
+
     public void reorderEntries(ArrayList<BookEntry> newOrder) {
         if (newOrder.size() != entries.size()) {
             throw new InvalidBookDataException(
@@ -165,6 +177,8 @@ public class Library {
         for (int i = 0; i < newOrder.size(); i++) {
             entries.add(newOrder.get(i));
         }
+        // Also can use one command instead of "for" loop
+        // entries.addAll(newOrder);
     }
 
     // ---------------------------------------------------------------

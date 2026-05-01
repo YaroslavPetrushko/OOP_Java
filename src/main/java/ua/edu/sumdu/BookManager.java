@@ -549,7 +549,19 @@ public class BookManager {
         System.out.println();
     }
 
-    // Збереження сортованого списку
+    /**
+     * Зберігає відсортований порядок книг.
+     *
+     * <p>Якщо користувач підтверджує збереження ({@code y}),
+     * внутрішній порядок {@link Library} оновлюється через
+     * {@link Library#reorderEntries(ArrayList)}, після чого
+     * зміни автоматично потраплять у файли при наступному збереженні.</p>
+     *
+     * <p>Якщо користувач відмовляється ({@code n}) або вводить щось інше —
+     * бібліотека залишається без змін.</p>
+     *
+     * @param sortedBooks відсортований список книг
+     */
     private void saveSortedBooks(ArrayList<BookEntry> sortedBooks) {
         // --- Запит на збереження порядку ---
         System.out.print("Save this order as the new library order? (y/n): ");
