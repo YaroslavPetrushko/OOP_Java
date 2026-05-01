@@ -123,8 +123,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v8.0            ║");
-        System.out.println("║ Library | Comparable | TXT+JSON storage  ║");
+        System.out.println("║            BOOK MANAGER  v9.0            ║");
+        System.out.println("║ Library | Comparator | TXT+JSON storage  ║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -424,20 +424,23 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 4: Виведення книг відсортованих за назвою
+    // Пункт 4: Меню сортування та виведення відсортованих книг
     // ---------------------------------------------------------------
 
     /**
-     * Виводить усі записи бібліотеки, відсортовані за назвою книги
-     * (лексикографічно, без урахування регістру).
+     * Виводить підменю вибору критерію сортування.
      *
-     * <p>Сортування виконується через {@link Collections#sort} —
-     * застосовується природний порядок, визначений у
-     * {@link Book#compareTo(Book)}.</p>
+     * <p>Для кожного критерію створюється анонімний внутрішній клас,
+     * що реалізує {@link java.util.Comparator}. Лямбда-вирази не використовуються.</p>
      *
-     * <p>Якщо бібліотека порожня — виводиться відповідне повідомлення.
-     * Внутрішня колекція {@link Library} не змінюється: сортується
-     * лише локальна копія списку.</p>
+     * <p>Критерії:</p>
+     * <ol>
+     *   <li>За назвою (A→Z, без урахування регістру) — делегує до {@link Book#compareTo}</li>
+     *   <li>За ціною (від найдешевшої до найдорожчої)</li>
+     *   <li>За роком видання (від найновішої до найстарішої)</li>
+     * </ol>
+     *
+     * <p>Пункт {@code 0} повертає до головного меню без сортування.</p>
      */
     private void printSortedBooks() {
         System.out.println("\n--- Sort books ---");
@@ -478,7 +481,14 @@ public class BookManager {
     // Анонімні компаратори
     // ---------------------------------------------------------------
 
-    // за назвою книги
+    /**
+     * Компаратор 1: за назвою книги (лексикографічно, без урахування регістру).
+     *
+     * <p>Делегує порівняння до {@link Book#compareTo(Book)}, що реалізує
+     * {@link Comparable} у батьківському класі.</p>
+     *
+     * @return анонімний {@code Comparator<BookEntry>}
+     */
     private java.util.Comparator<BookEntry> buildTitleComparator() {
         return new java.util.Comparator<BookEntry>() {
             @Override
@@ -488,7 +498,14 @@ public class BookManager {
         };
     }
 
-    // за ціною
+    /**
+     * Компаратор 2: за ціною (зростання).
+     *
+     * <p>Використовує {@link Double#compare} для коректного порівняння
+     * дійсних чисел без похибок рухомої крапки.</p>
+     *
+     * @return анонімний {@code Comparator<BookEntry>}
+     */
     private java.util.Comparator<BookEntry> buildPriceComparator() {
         return new java.util.Comparator<BookEntry>() {
             @Override
@@ -498,7 +515,14 @@ public class BookManager {
         };
     }
 
-    // за роком
+    /**
+     * Компаратор 3: за роком видання (спадання — від найновішої до найстарішої).
+     *
+     * <p>При однаковому році вторинним критерієм слугує назва книги,
+     * що робить сортування стабільним і однозначним.</p>
+     *
+     * @return анонімний {@code Comparator<BookEntry>}
+     */
     private java.util.Comparator<BookEntry> buildYearComparator() {
         return new java.util.Comparator<BookEntry>() {
             @Override
@@ -513,7 +537,16 @@ public class BookManager {
         };
     }
 
-    // Метод для виведення
+    /**
+     * Сортує список за переданим компаратором і виводить результат у консоль.
+     *
+     * <p>Отримує незалежну копію від {@link Library#getAllEntries()},
+     * тому внутрішній порядок бібліотеки залишається незмінним.</p>
+     *
+     * @param entries   список для сортування (копія, не оригінал)
+     * @param cmp       компаратор ({@link java.util.Comparator}{@code <BookEntry>})
+     * @param criterion текстовий опис критерію для заголовка виводу
+     */
     private void sortAndPrint(ArrayList<BookEntry> entries,
                               java.util.Comparator<BookEntry> cmp,
                               String criterion) {

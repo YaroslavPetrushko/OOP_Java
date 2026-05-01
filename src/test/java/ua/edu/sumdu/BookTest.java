@@ -576,4 +576,165 @@ class BookTest {
                 BookCondition.MINT, 15000.0, 2005), 5);
         return storageLibrary;
     }
+
+    // ---------------------------------------------------------------
+    // Comparator — три критерії сортування
+    // ---------------------------------------------------------------
+
+    /** Компаратор 1: за назвою (A → Z). */
+    private java.util.Comparator<BookEntry> titleComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                return a.getBook().compareTo(b.getBook());
+            }
+        };
+    }
+
+    /** Компаратор 2: за ціною (зростання). */
+    private java.util.Comparator<BookEntry> priceComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                return Double.compare(a.getBook().getPrice(), b.getBook().getPrice());
+            }
+        };
+    }
+
+    /** Компаратор 3: за роком (спадання), вторинно за назвою. */
+    private java.util.Comparator<BookEntry> yearComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                int diff = b.getBook().getYear() - a.getBook().getYear();
+                if (diff != 0) return diff;
+                return a.getBook().compareTo(b.getBook());
+            }
+        };
+    }
+
+    // --- title ---
+
+    @Test
+    void titleComparator_sixBooks_correctOrder() {
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+        Collections.sort(sorted, titleComparator());
+
+        assertEquals("Clean Code",           sorted.get(0).getBook().getTitle());
+        assertEquals("Design Patterns",      sorted.get(1).getBook().getTitle());
+        assertEquals("Dune",                 sorted.get(2).getBook().getTitle());
+        assertEquals("Moby Dick",            sorted.get(3).getBook().getTitle());
+        assertEquals("Pragmatic Programmer", sorted.get(4).getBook().getTitle());
+        assertEquals("The Clean Coder",      sorted.get(5).getBook().getTitle());
+    }
+
+    @Test
+    void titleComparator_emptyList_noException() {
+        ArrayList<BookEntry> empty = new ArrayList<BookEntry>();
+        assertDoesNotThrow(() -> Collections.sort(empty, titleComparator()));
+        assertTrue(empty.isEmpty());
+    }
+
+    @Test
+    void titleComparator_singleElement_unchanged() {
+        ArrayList<BookEntry> single = new ArrayList<BookEntry>();
+        single.add(new BookEntry(cleanCode, 1));
+        Collections.sort(single, titleComparator());
+        assertEquals("Clean Code", single.get(0).getBook().getTitle());
+    }
+
+    // --- price ---
+
+    @Test
+    void priceComparator_sixBooks_cheapestFirst() {
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+        Collections.sort(sorted, priceComparator());
+
+        // Dune $19.99 → Moby Dick $12.99 ... перевіряємо перший та останній
+        double first = sorted.get(0).getBook().getPrice();
+        double last  = sorted.get(sorted.size() - 1).getBook().getPrice();
+        assertTrue(first <= last);
+
+        // Повна перевірка порядку
+        for (int i = 0; i < sorted.size() - 1; i++) {
+            assertTrue(sorted.get(i).getBook().getPrice()
+                    <= sorted.get(i + 1).getBook().getPrice());
+        }
+    }
+
+    @Test
+    void priceComparator_exactValues() {
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+        Collections.sort(sorted, priceComparator());
+
+        // Найдешевша — Moby Dick $12.99, найдорожча — Design Patterns $54.99
+        assertEquals("Moby Dick",        sorted.get(0).getBook().getTitle());
+        assertEquals("Design Patterns",  sorted.get(sorted.size() - 1).getBook().getTitle());
+    }
+
+    @Test
+    void priceComparator_emptyList_noException() {
+        ArrayList<BookEntry> empty = new ArrayList<BookEntry>();
+        assertDoesNotThrow(() -> Collections.sort(empty, priceComparator()));
+    }
+
+    // --- year ---
+
+    @Test
+    void yearComparator_sixBooks_newestFirst() {
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+        Collections.sort(sorted, yearComparator());
+
+        // Перевіряємо, що роки не зростають
+        for (int i = 0; i < sorted.size() - 1; i++) {
+            assertTrue(sorted.get(i).getBook().getYear()
+                    >= sorted.get(i + 1).getBook().getYear());
+        }
+    }
+
+    @Test
+    void yearComparator_exactOrder() {
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+        Collections.sort(sorted, yearComparator());
+
+        // Найновіша — Pragmatic Programmer 2019, найстаріша — Moby Dick 1851
+        assertEquals("Pragmatic Programmer", sorted.get(0).getBook().getTitle());
+        assertEquals("Moby Dick",            sorted.get(sorted.size() - 1).getBook().getTitle());
+    }
+
+    @Test
+    void yearComparator_sameYear_secondarySortByTitle() {
+        Library sameYear = new Library("Same Year", "Nowhere");
+        sameYear.addNewBook(new EBook("Zebra", "A", 2020, 10.0, Genre.FICTION, 100,
+                "PDF", 1.0, "https://x.com"), 1);
+        sameYear.addNewBook(new EBook("Alpha", "B", 2020, 20.0, Genre.FICTION, 200,
+                "PDF", 1.0, "https://x.com"), 1);
+        sameYear.addNewBook(new EBook("Mango", "C", 2020, 5.0, Genre.FICTION, 50,
+                "PDF", 1.0, "https://x.com"), 1);
+
+        ArrayList<BookEntry> sorted = sameYear.getAllEntries();
+        Collections.sort(sorted, yearComparator());
+
+        assertEquals("Alpha", sorted.get(0).getBook().getTitle());
+        assertEquals("Mango", sorted.get(1).getBook().getTitle());
+        assertEquals("Zebra", sorted.get(2).getBook().getTitle());
+    }
+
+    @Test
+    void yearComparator_emptyList_noException() {
+        ArrayList<BookEntry> empty = new ArrayList<BookEntry>();
+        assertDoesNotThrow(() -> Collections.sort(empty, yearComparator()));
+    }
+
+    // --- незалежність бібліотеки ---
+
+    @Test
+    void anyComparator_doesNotModifyLibraryOrder() {
+        String firstBefore = library.getEntry(0).getBook().getTitle();
+
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+        Collections.sort(sorted, priceComparator());
+
+        assertEquals(firstBefore, library.getEntry(0).getBook().getTitle());
+    }
 }
