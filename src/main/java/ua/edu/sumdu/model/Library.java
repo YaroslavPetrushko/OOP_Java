@@ -142,6 +142,11 @@ public class Library {
         entries.add(new BookEntry(bk, quantity));
     }
 
+    // Повертає копію колекції як новий список
+    public ArrayList<BookEntry> getAllEntries() {
+        return new ArrayList<BookEntry>(entries);
+    }
+
     // ---------------------------------------------------------------
     // Методи пошуку (не змінюють колекцію)
     // ---------------------------------------------------------------

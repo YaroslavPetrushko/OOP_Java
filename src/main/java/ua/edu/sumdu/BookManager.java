@@ -6,6 +6,7 @@ import ua.edu.sumdu.storage.TxtBookStorage;
 import ua.edu.sumdu.storage.JsonBookStorage;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 
 /**
@@ -99,7 +100,8 @@ public class BookManager {
                 case 1 -> searchMenu();
                 case 2 -> createObject();
                 case 3 -> printAllBooks();
-                case 4 -> {
+                case 4 -> printSortedBooks();
+                case 5 -> {
                     saveBooks();
                     System.out.println("Goodbye!");
                     running = false;
@@ -163,7 +165,8 @@ public class BookManager {
         System.out.println("1. Search book");
         System.out.println("2. Create new book");
         System.out.println("3. Show all books");
-        System.out.println("4. Exit");
+        System.out.println("4. Show books sorted by title");
+        System.out.println("5. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -414,6 +417,34 @@ public class BookManager {
         for (int i = 0; i < library.getEntryCount(); i++) {
             BookEntry entry = library.getEntry(i);
             System.out.println("  " + (i + 1) + ". " + entry);
+        }
+        System.out.println();
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 4: Виведення книг відсортованих за назвою
+    // ---------------------------------------------------------------
+
+    private void printSortedBooks() {
+        System.out.println("\n--- Sorted by title: " + library.getName()
+                + " [" + library.getEntryCount() + " title(s)] ---");
+
+        if (library.getEntryCount() == 0) {
+            System.out.println("  (library is empty)\n");
+            return;
+        }
+
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+
+        Collections.sort(sorted, new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                return a.getBook().compareTo(b.getBook());
+            }
+        });
+
+        for (int i = 0; i < sorted.size(); i++) {
+            System.out.println("  " + (i + 1) + ". " + sorted.get(i));
         }
         System.out.println();
     }
