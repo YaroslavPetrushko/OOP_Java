@@ -489,16 +489,29 @@ public class BookManager {
     }
 
     // за ціною
-    //    private java.util.Comparator<BookEntry> buildPriceComparator() {
-    //        return new java.util.Comparator<BookEntry>() {
-    //        };
-    //    }
+    private java.util.Comparator<BookEntry> buildPriceComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                return Double.compare(a.getBook().getPrice(), b.getBook().getPrice());
+            }
+        };
+    }
 
     // за роком
-    //    private java.util.Comparator<BookEntry> buildYearComparator() {
-    //        return new java.util.Comparator<BookEntry>() {
-    //        };
-    //    }
+    private java.util.Comparator<BookEntry> buildYearComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                int yearDiff = b.getBook().getYear() - a.getBook().getYear();
+                if (yearDiff != 0) {
+                    return yearDiff;
+                }
+                // Вторинний критерій: назва (A → Z) для однакових років
+                return a.getBook().compareTo(b.getBook());
+            }
+        };
+    }
 
     // Метод для виведення
     private void sortAndPrint(ArrayList<BookEntry> entries,
