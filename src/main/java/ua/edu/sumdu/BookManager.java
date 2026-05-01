@@ -7,6 +7,7 @@ import ua.edu.sumdu.storage.JsonBookStorage;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Scanner;
 
 /**
@@ -436,12 +437,7 @@ public class BookManager {
 
         ArrayList<BookEntry> sorted = library.getAllEntries();
 
-        Collections.sort(sorted, new java.util.Comparator<BookEntry>() {
-            @Override
-            public int compare(BookEntry a, BookEntry b) {
-                return a.getBook().compareTo(b.getBook());
-            }
-        });
+        Collections.sort(sorted, Comparator.comparing(BookEntry::getBook));
 
         for (int i = 0; i < sorted.size(); i++) {
             System.out.println("  " + (i + 1) + ". " + sorted.get(i));
