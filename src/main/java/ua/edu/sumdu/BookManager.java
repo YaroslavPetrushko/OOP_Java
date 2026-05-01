@@ -123,8 +123,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v8.0            ║");
-        System.out.println("║ Library | Comparable | TXT+JSON storage  ║");
+        System.out.println("║            BOOK MANAGER  v9.0            ║");
+        System.out.println("║ Library | Comparator | TXT+JSON storage  ║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -166,7 +166,7 @@ public class BookManager {
         System.out.println("1. Search book");
         System.out.println("2. Create new book");
         System.out.println("3. Show all books");
-        System.out.println("4. Show books sorted by title");
+        System.out.println("4. Sort books");
         System.out.println("5. Exit");
         System.out.print("Your choice: ");
     }
@@ -424,24 +424,44 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 4: Виведення книг відсортованих за назвою
+    // Пункт 4: Меню сортування та виведення відсортованих книг
     // ---------------------------------------------------------------
 
     /**
-     * Виводить усі записи бібліотеки, відсортовані за назвою книги
-     * (лексикографічно, без урахування регістру).
+     * Виводить підменю вибору критерію сортування.
      *
-     * <p>Сортування виконується через {@link Collections#sort} —
-     * застосовується природний порядок, визначений у
-     * {@link Book#compareTo(Book)}.</p>
+     * <p>Для кожного критерію створюється анонімний внутрішній клас,
+     * що реалізує {@link java.util.Comparator}. Лямбда-вирази не використовуються.</p>
      *
-     * <p>Якщо бібліотека порожня — виводиться відповідне повідомлення.
-     * Внутрішня колекція {@link Library} не змінюється: сортується
-     * лише локальна копія списку.</p>
+     * <p>Критерії:</p>
+     * <ol>
+     *   <li>За назвою (A→Z, без урахування регістру) — делегує до {@link Book#compareTo}</li>
+     *   <li>За ціною (від найдешевшої до найдорожчої)</li>
+     *   <li>За роком видання (від найновішої до найстарішої)</li>
+     * </ol>
+     *
+     * <p>Пункт {@code 0} повертає до головного меню без сортування.</p>
      */
     private void printSortedBooks() {
-        System.out.println("\n--- Sorted by title: " + library.getName()
-                + " [" + library.getEntryCount() + " title(s)] ---");
+        System.out.println("\n--- Sort books ---");
+        System.out.println("  1. Sort by title        (A → Z)");
+        System.out.println("  2. Sort by price        (cheapest first)");
+        System.out.println("  3. Sort by release year (newest first)");
+        System.out.println("  0. Back to main menu");
+        System.out.print("Criterion: ");
+
+        int choice = readMenuChoice();
+        System.out.println();
+
+        if (choice == 0) {
+            System.out.println("  Cancelled.\n");
+            return;
+        }
+
+        if (choice < 1 || choice > 3) {
+            System.out.println("  [!] Unknown criterion.\n");
+            return;
+        }
 
         if (library.getEntryCount() == 0) {
             System.out.println("  (library is empty)\n");
@@ -450,13 +470,95 @@ public class BookManager {
 
         ArrayList<BookEntry> sorted = library.getAllEntries();
 
-        Collections.sort(sorted, Comparator.comparing(BookEntry::getBook));
+        switch (choice) {
+            case 1 -> sortAndPrint(sorted, buildTitleComparator(),  "title (A → Z)");
+            case 2 -> sortAndPrint(sorted, buildPriceComparator(),  "price (cheapest first)");
+            case 3 -> sortAndPrint(sorted, buildYearComparator(),   "year (newest first)");
+        }
+    }
 
-        // Var with lambda expression
-        //Collections.sort(sorted,(a, b) -> a.getBook().compareTo(b.getBook()));
+    // ---------------------------------------------------------------
+    // Анонімні компаратори
+    // ---------------------------------------------------------------
 
-        for (int i = 0; i < sorted.size(); i++) {
-            System.out.println("  " + (i + 1) + ". " + sorted.get(i));
+    /**
+     * Компаратор 1: за назвою книги (лексикографічно, без урахування регістру).
+     *
+     * <p>Делегує порівняння до {@link Book#compareTo(Book)}, що реалізує
+     * {@link Comparable} у батьківському класі.</p>
+     *
+     * @return анонімний {@code Comparator<BookEntry>}
+     */
+    private java.util.Comparator<BookEntry> buildTitleComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                return a.getBook().compareTo(b.getBook());
+            }
+        };
+    }
+
+    /**
+     * Компаратор 2: за ціною (зростання).
+     *
+     * <p>Використовує {@link Double#compare} для коректного порівняння
+     * дійсних чисел без похибок рухомої крапки.</p>
+     *
+     * @return анонімний {@code Comparator<BookEntry>}
+     */
+    private java.util.Comparator<BookEntry> buildPriceComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                return Double.compare(a.getBook().getPrice(), b.getBook().getPrice());
+            }
+        };
+    }
+
+    /**
+     * Компаратор 3: за роком видання (спадання — від найновішої до найстарішої).
+     *
+     * <p>При однаковому році вторинним критерієм слугує назва книги,
+     * що робить сортування стабільним і однозначним.</p>
+     *
+     * @return анонімний {@code Comparator<BookEntry>}
+     */
+    private java.util.Comparator<BookEntry> buildYearComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                int yearDiff = b.getBook().getYear() - a.getBook().getYear();
+                if (yearDiff != 0) {
+                    return yearDiff;
+                }
+                // Вторинний критерій: назва (A → Z) для однакових років
+                return a.getBook().compareTo(b.getBook());
+            }
+        };
+    }
+
+    /**
+     * Сортує список за переданим компаратором і виводить результат у консоль.
+     *
+     * <p>Отримує незалежну копію від {@link Library#getAllEntries()},
+     * тому внутрішній порядок бібліотеки залишається незмінним.</p>
+     *
+     * @param entries   список для сортування (копія, не оригінал)
+     * @param cmp       компаратор ({@link java.util.Comparator}{@code <BookEntry>})
+     * @param criterion текстовий опис критерію для заголовка виводу
+     */
+    private void sortAndPrint(ArrayList<BookEntry> entries,
+                              java.util.Comparator<BookEntry> cmp,
+                              String criterion) {
+        System.out.println("--- Sorted by " + criterion
+                + " [" + entries.size() + " title(s)] ---");
+
+        Collections.sort(entries, cmp);
+        // var with list.sort
+        // entries.sort(cmp);
+
+        for (int i = 0; i < entries.size(); i++) {
+            System.out.println("  " + (i + 1) + ". " + entries.get(i));
         }
         System.out.println();
     }
