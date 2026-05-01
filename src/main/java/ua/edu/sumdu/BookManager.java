@@ -123,8 +123,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v9.0            ║");
-        System.out.println("║ Library | Comparator | TXT+JSON storage  ║");
+        System.out.println("║            BOOK MANAGER  v9.1            ║");
+        System.out.println("║ Library | Comparator λ | TXT+JSON storage║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -483,57 +483,41 @@ public class BookManager {
 
     /**
      * Компаратор 1: за назвою книги (лексикографічно, без урахування регістру).
-     *
+     * Реалізовано як лямбда-вираз.
      * <p>Делегує порівняння до {@link Book#compareTo(Book)}, що реалізує
      * {@link Comparable} у батьківському класі.</p>
      *
      * @return анонімний {@code Comparator<BookEntry>}
      */
-    private java.util.Comparator<BookEntry> buildTitleComparator() {
-        return new java.util.Comparator<BookEntry>() {
-            @Override
-            public int compare(BookEntry a, BookEntry b) {
-                return a.getBook().compareTo(b.getBook());
-            }
-        };
+    private Comparator<BookEntry> buildTitleComparator() {
+        return (a, b) -> a.getBook().compareTo(b.getBook());
     }
 
     /**
      * Компаратор 2: за ціною (зростання).
-     *
+     * Реалізовано як лямбда-вираз.
      * <p>Використовує {@link Double#compare} для коректного порівняння
      * дійсних чисел без похибок рухомої крапки.</p>
      *
      * @return анонімний {@code Comparator<BookEntry>}
      */
-    private java.util.Comparator<BookEntry> buildPriceComparator() {
-        return new java.util.Comparator<BookEntry>() {
-            @Override
-            public int compare(BookEntry a, BookEntry b) {
-                return Double.compare(a.getBook().getPrice(), b.getBook().getPrice());
-            }
-        };
+    private Comparator<BookEntry> buildPriceComparator() {
+        return (a, b) -> Double.compare(a.getBook().getPrice(), b.getBook().getPrice());
     }
 
     /**
      * Компаратор 3: за роком видання (спадання — від найновішої до найстарішої).
-     *
+     * Реалізовано як лямбда-вираз.
      * <p>При однаковому році вторинним критерієм слугує назва книги,
      * що робить сортування стабільним і однозначним.</p>
      *
      * @return анонімний {@code Comparator<BookEntry>}
      */
-    private java.util.Comparator<BookEntry> buildYearComparator() {
-        return new java.util.Comparator<BookEntry>() {
-            @Override
-            public int compare(BookEntry a, BookEntry b) {
-                int yearDiff = b.getBook().getYear() - a.getBook().getYear();
-                if (yearDiff != 0) {
-                    return yearDiff;
-                }
-                // Вторинний критерій: назва (A → Z) для однакових років
-                return a.getBook().compareTo(b.getBook());
-            }
+    private Comparator<BookEntry> buildYearComparator() {
+        return (a, b) -> {
+            int diff = b.getBook().getYear() - a.getBook().getYear();
+            if (diff != 0) return diff;
+            return a.getBook().compareTo(b.getBook());
         };
     }
 
