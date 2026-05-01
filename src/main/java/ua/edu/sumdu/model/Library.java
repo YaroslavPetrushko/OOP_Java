@@ -154,6 +154,19 @@ public class Library {
         return new ArrayList<BookEntry>(entries);
     }
 
+    // Метод для певпорядкування списку
+    public void reorderEntries(ArrayList<BookEntry> newOrder) {
+        if (newOrder.size() != entries.size()) {
+            throw new InvalidBookDataException(
+                    "Cannot reorder: size mismatch ("
+                            + newOrder.size() + " vs " + entries.size() + ").");
+        }
+        entries.clear();
+        for (int i = 0; i < newOrder.size(); i++) {
+            entries.add(newOrder.get(i));
+        }
+    }
+
     // ---------------------------------------------------------------
     // Методи пошуку (не змінюють колекцію)
     // ---------------------------------------------------------------

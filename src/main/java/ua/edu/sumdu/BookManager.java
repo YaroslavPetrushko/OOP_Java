@@ -101,7 +101,7 @@ public class BookManager {
                 case 1 -> searchMenu();
                 case 2 -> createObject();
                 case 3 -> printAllBooks();
-                case 4 -> printSortedBooks();
+                case 4 -> sortBooks();
                 case 5 -> {
                     saveBooks();
                     System.out.println("Goodbye!");
@@ -442,7 +442,7 @@ public class BookManager {
      *
      * <p>Пункт {@code 0} повертає до головного меню без сортування.</p>
      */
-    private void printSortedBooks() {
+    private void sortBooks() {
         System.out.println("\n--- Sort books ---");
         System.out.println("  1. Sort by title        (A → Z)");
         System.out.println("  2. Sort by price        (cheapest first)");
@@ -475,6 +475,8 @@ public class BookManager {
             case 2 -> sortAndPrint(sorted, buildPriceComparator(),  "price (cheapest first)");
             case 3 -> sortAndPrint(sorted, buildYearComparator(),   "year (newest first)");
         }
+
+        saveSortedBooks(sorted);
     }
 
     // ---------------------------------------------------------------
@@ -545,6 +547,21 @@ public class BookManager {
             System.out.println("  " + (i + 1) + ". " + entries.get(i));
         }
         System.out.println();
+    }
+
+    // Збереження сортованого списку
+    private void saveSortedBooks(ArrayList<BookEntry> sortedBooks) {
+        // --- Запит на збереження порядку ---
+        System.out.print("Save this order as the new library order? (y/n): ");
+        String answer = scanner.nextLine().trim().toLowerCase();
+
+        if (answer.equals("y")||answer.equals("yes")) {
+            library.reorderEntries(sortedBooks);
+            System.out.println("  [OK] New order saved.\n");
+        } else {
+            System.out.println("  Order not saved.\n");
+        }
+
     }
 
     // ---------------------------------------------------------------
