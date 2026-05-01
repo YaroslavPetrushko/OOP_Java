@@ -440,25 +440,45 @@ public class BookManager {
      * лише локальна копія списку.</p>
      */
     private void printSortedBooks() {
-        System.out.println("\n--- Sorted by title: " + library.getName()
-                + " [" + library.getEntryCount() + " title(s)] ---");
+        System.out.println("\n--- Sort books ---");
+        System.out.println("  1. Sort by title        (A → Z)");
+        System.out.println("  2. Sort by price        (cheapest first)");
+        System.out.println("  3. Sort by release year (newest first)");
+        System.out.print("Criterion: ");
 
-        if (library.getEntryCount() == 0) {
-            System.out.println("  (library is empty)\n");
-            return;
-        }
-
-        ArrayList<BookEntry> sorted = library.getAllEntries();
-
-        Collections.sort(sorted, Comparator.comparing(BookEntry::getBook));
-
-        // Var with lambda expression
-        //Collections.sort(sorted,(a, b) -> a.getBook().compareTo(b.getBook()));
-
-        for (int i = 0; i < sorted.size(); i++) {
-            System.out.println("  " + (i + 1) + ". " + sorted.get(i));
-        }
+        int choice = readMenuChoice();
         System.out.println();
+
+        switch (choice) {
+            case 1 -> {
+                System.out.println("\n--- Sorted by title: " + library.getName()
+                        + " [" + library.getEntryCount() + " title(s)] ---");
+
+                if (library.getEntryCount() == 0) {
+                    System.out.println("  (library is empty)\n");
+                    return;
+                }
+
+                ArrayList<BookEntry> sorted = library.getAllEntries();
+
+                Collections.sort(sorted, Comparator.comparing(BookEntry::getBook));
+
+                // Var with lambda expression
+                //Collections.sort(sorted,(a, b) -> a.getBook().compareTo(b.getBook()));
+
+                for (int i = 0; i < sorted.size(); i++) {
+                    System.out.println("  " + (i + 1) + ". " + sorted.get(i));
+                }
+                System.out.println();
+            }
+            //case 2 -> sortAndPrint  //price (cheapest first)
+            //case 3 -> sortAndPrint  //year (newest first)
+            default ->
+            {
+                System.out.println("  (library is empty)\n");
+            }
+        }
+
     }
 
     // ---------------------------------------------------------------
