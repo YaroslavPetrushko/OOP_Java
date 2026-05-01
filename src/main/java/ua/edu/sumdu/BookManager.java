@@ -444,41 +444,75 @@ public class BookManager {
         System.out.println("  1. Sort by title        (A → Z)");
         System.out.println("  2. Sort by price        (cheapest first)");
         System.out.println("  3. Sort by release year (newest first)");
+        System.out.println("  0. Back to main menu");
         System.out.print("Criterion: ");
 
         int choice = readMenuChoice();
         System.out.println();
 
-        switch (choice) {
-            case 1 -> {
-                System.out.println("\n--- Sorted by title: " + library.getName()
-                        + " [" + library.getEntryCount() + " title(s)] ---");
-
-                if (library.getEntryCount() == 0) {
-                    System.out.println("  (library is empty)\n");
-                    return;
-                }
-
-                ArrayList<BookEntry> sorted = library.getAllEntries();
-
-                Collections.sort(sorted, Comparator.comparing(BookEntry::getBook));
-
-                // Var with lambda expression
-                //Collections.sort(sorted,(a, b) -> a.getBook().compareTo(b.getBook()));
-
-                for (int i = 0; i < sorted.size(); i++) {
-                    System.out.println("  " + (i + 1) + ". " + sorted.get(i));
-                }
-                System.out.println();
-            }
-            //case 2 -> sortAndPrint  //price (cheapest first)
-            //case 3 -> sortAndPrint  //year (newest first)
-            default ->
-            {
-                System.out.println("  (library is empty)\n");
-            }
+        if (choice == 0) {
+            System.out.println("  Cancelled.\n");
+            return;
         }
 
+        if (choice < 1 || choice > 3) {
+            System.out.println("  [!] Unknown criterion.\n");
+            return;
+        }
+
+        if (library.getEntryCount() == 0) {
+            System.out.println("  (library is empty)\n");
+            return;
+        }
+
+        ArrayList<BookEntry> sorted = library.getAllEntries();
+
+        switch (choice) {
+            case 1 -> sortAndPrint(sorted, buildTitleComparator(),  "title (A → Z)");
+            case 2 -> sortAndPrint(sorted, buildPriceComparator(),  "price (cheapest first)");
+            case 3 -> sortAndPrint(sorted, buildYearComparator(),   "year (newest first)");
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Анонімні компаратори
+    // ---------------------------------------------------------------
+
+    // за назвою книги
+    private java.util.Comparator<BookEntry> buildTitleComparator() {
+        return new java.util.Comparator<BookEntry>() {
+            @Override
+            public int compare(BookEntry a, BookEntry b) {
+                return a.getBook().compareTo(b.getBook());
+            }
+        };
+    }
+
+    // за ціною
+    //    private java.util.Comparator<BookEntry> buildPriceComparator() {
+    //        return new java.util.Comparator<BookEntry>() {
+    //        };
+    //    }
+
+    // за роком
+    //    private java.util.Comparator<BookEntry> buildYearComparator() {
+    //        return new java.util.Comparator<BookEntry>() {
+    //        };
+    //    }
+
+    // Метод для виведення
+    private void sortAndPrint(ArrayList<BookEntry> entries,
+                              java.util.Comparator<BookEntry> cmp,
+                              String criterion) {
+        System.out.println("--- Sorted by " + criterion
+                + " [" + entries.size() + " title(s)] ---");
+
+        Collections.sort(entries, cmp);
+
+        for (int i = 0; i < entries.size(); i++) {
+            System.out.println("  " + (i + 1) + ". " + entries.get(i));
+        }
+        System.out.println();
     }
 
     // ---------------------------------------------------------------
