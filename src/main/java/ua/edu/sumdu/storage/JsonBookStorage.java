@@ -201,9 +201,9 @@ public class JsonBookStorage implements BookStorage {
 
             Book book;
             switch (classType) {
-                case "BOOK":
-                    book = rawGson.fromJson(obj, Book.class);
-                    break;
+//                case "BOOK":
+//                    book = rawGson.fromJson(obj, Book.class);
+//                    break;
                 case "EBOOK":
                     book = rawGson.fromJson(obj, EBook.class);
                     break;

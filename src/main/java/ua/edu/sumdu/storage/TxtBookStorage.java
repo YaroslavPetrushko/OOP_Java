@@ -104,8 +104,8 @@ public class TxtBookStorage implements BookStorage {
         String type = parts[0].trim().toUpperCase();
         try {
             switch (type) {
-                case "BOOK":
-                    return parseBook(parts, lineNumber, library);
+//                case "BOOK":
+//                    return parseBook(parts, lineNumber, library);
                 case "EBOOK":
                     return parseEBook(parts, lineNumber, library);
                 case "AUDIOBOOK":
@@ -125,15 +125,15 @@ public class TxtBookStorage implements BookStorage {
     }
 
     /** Розбирає базову книгу (8 полів: quantity + type + 6). */
-    private boolean parseBook(String[] parts, int lineNumber, Library library) {
-        checkLength(parts, 8, lineNumber, "BOOK");
-        Book book = new Book(
-                parts[1].trim(), parts[2].trim(),
-                parseInt(parts[3], lineNumber), parseDouble(parts[4], lineNumber),
-                Genre.valueOf(parts[5].trim()), parseInt(parts[6], lineNumber));
-        library.addNewBook(book, parseInt(parts[7], lineNumber));
-        return true;
-    }
+//    private boolean parseBook(String[] parts, int lineNumber, Library library) {
+//        checkLength(parts, 8, lineNumber, "BOOK");
+//        Book book = new Book(
+//                parts[1].trim(), parts[2].trim(),
+//                parseInt(parts[3], lineNumber), parseDouble(parts[4], lineNumber),
+//                Genre.valueOf(parts[5].trim()), parseInt(parts[6], lineNumber));
+//        library.addNewBook(book, parseInt(parts[7], lineNumber));
+//        return true;
+//    }
 
     /** Розбирає EBook (11 полів). */
     private Boolean parseEBook(String[] parts, int lineNumber, Library library) {
