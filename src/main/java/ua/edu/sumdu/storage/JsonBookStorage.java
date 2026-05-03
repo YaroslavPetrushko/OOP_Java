@@ -17,6 +17,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.UUID;
 
 /**
  * Реалізація {@link BookStorage} для JSON-файлу з використанням бібліотеки Gson.
@@ -164,6 +165,8 @@ public class JsonBookStorage implements BookStorage {
     private class BookEntryAdapter
             implements JsonSerializer<BookEntry>, JsonDeserializer<BookEntry> {
 
+        private static final String ID_FIELD = "id";
+
         /**
          * Серіалізує об'єкт {@link Book} у JSON з полем {@code classType}.
          */
@@ -172,6 +175,9 @@ public class JsonBookStorage implements BookStorage {
                                      JsonSerializationContext context) {
             Book book = src.getBook();
             JsonObject obj = rawGson.toJsonTree(book).getAsJsonObject();
+
+            // Оброблюємо UUID
+            obj.addProperty(ID_FIELD, book.getUuid() != null ? book.getUuid().toString() : null);
             obj.addProperty(CLASS_TYPE_FIELD, book.getClass().getSimpleName().toUpperCase());
             obj.addProperty(QUANTITY_FIELD, src.getQuantity());
             return obj;
@@ -196,29 +202,32 @@ public class JsonBookStorage implements BookStorage {
                 throw new JsonParseException("Missing '" + QUANTITY_FIELD + "' field.");
             }
 
+            UUID uuid = null;
+            if (obj.has(ID_FIELD)) {
+                try {
+                    uuid = UUID.fromString(obj.get(ID_FIELD).getAsString());
+                } catch (IllegalArgumentException e) {
+                    throw new JsonParseException("Invalid UUID format for field '" + ID_FIELD + "'", e);
+                }
+            }
+
             int quantity = obj.get(QUANTITY_FIELD).getAsInt();
             String classType = obj.get(CLASS_TYPE_FIELD).getAsString().toUpperCase();
 
             Book book;
             switch (classType) {
-//                case "BOOK":
-//                    book = rawGson.fromJson(obj, Book.class);
-//                    break;
-                case "EBOOK":
-                    book = rawGson.fromJson(obj, EBook.class);
-                    break;
-                case "AUDIOBOOK":
-                    book = rawGson.fromJson(obj, AudioBook.class);
-                    break;
-                case "PAPERBOOK":
-                    book = rawGson.fromJson(obj, PaperBook.class);
-                    break;
-                case "RAREBOOK":
-                    book = rawGson.fromJson(obj, RareBook.class);
-                    break;
+                case "EBOOK":      book = rawGson.fromJson(obj, EBook.class); break;
+                case "AUDIOBOOK":  book = rawGson.fromJson(obj, AudioBook.class); break;
+                case "PAPERBOOK":  book = rawGson.fromJson(obj, PaperBook.class); break;
+                case "RAREBOOK":   book = rawGson.fromJson(obj, RareBook.class); break;
                 default:
                     throw new JsonParseException("Unknown classType: " + classType);
             }
+
+            if (book != null && uuid != null) {
+                book.setUuid(uuid.toString());
+            }
+
             return new BookEntry(book, quantity);
         }
     }
