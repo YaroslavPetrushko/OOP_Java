@@ -1,6 +1,7 @@
 package ua.edu.sumdu.model;
 
 import java.util.Objects;
+import java.util.UUID;
 import java.time.Year;
 
 /**
@@ -26,7 +27,7 @@ import java.time.Year;
  *   <li>{@code pages}  — кількість сторінок (&gt; 0)</li>
  * </ul>
  */
-public abstract class Book implements Comparable<Book> {
+public abstract class Book implements Comparable<Book>, Identifiable {
 
     // ---------------------------------------------------------------
     // Константи
@@ -38,6 +39,9 @@ public abstract class Book implements Comparable<Book> {
     // ---------------------------------------------------------------
     // Поля екземпляра
     // ---------------------------------------------------------------
+
+    // Унікальний ідентифікатор об'єкта
+    private String uuid;
 
     private String title;
     private String author;
@@ -63,6 +67,9 @@ public abstract class Book implements Comparable<Book> {
      * @throws InvalidBookDataException якщо будь-який із параметрів некоректний
      */
     public Book(String title, String author, int year, double price, Genre genre, int pages) {
+        // UUID генерується автоматично
+        this.uuid = UUID.randomUUID().toString();
+
         // Використовуємо сетери, щоб не дублювати логіку валідації
         setTitle(title);
         setAuthor(author);
@@ -86,12 +93,38 @@ public abstract class Book implements Comparable<Book> {
         if (other == null) {
             throw new InvalidBookDataException("Source book for copying cannot be null.");
         }
+        this.uuid   = UUID.randomUUID().toString(); // копія отримує свій UUID
         this.title  = other.title;
         this.author = other.author;
         this.year   = other.year;
         this.price  = other.price;
         this.genre  = other.genre;
         this.pages  = other.pages;
+    }
+
+    // ---------------------------------------------------------------
+    // Identifiable
+    // ---------------------------------------------------------------
+
+    @Override
+    public UUID getUuid() {
+        if (uuid == null) {
+            uuid = UUID.randomUUID().toString();
+        }
+        return UUID.fromString(uuid);
+    }
+
+    public void setUuid(String uuidString) {
+        if (uuidString == null || uuidString.isBlank()) {
+            this.uuid = UUID.randomUUID().toString();
+            return;
+        }
+        try {
+            UUID.fromString(uuidString.trim()); // validate
+            this.uuid = uuidString.trim();
+        } catch (IllegalArgumentException e) {
+            this.uuid = UUID.randomUUID().toString();
+        }
     }
 
     // ---------------------------------------------------------------
