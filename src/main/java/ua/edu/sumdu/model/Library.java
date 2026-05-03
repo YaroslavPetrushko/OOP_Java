@@ -1,6 +1,7 @@
 package ua.edu.sumdu.model;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 /**
  * Бібліотека — клас-контейнер для зберігання книг з урахуванням кількості примірників.
@@ -185,6 +186,18 @@ public class Library {
     // Методи пошуку (не змінюють колекцію)
     // ---------------------------------------------------------------
 
+    // Знаходить запис за UUID
+    public BookEntry findByUuid(String uuidString) {
+        if (uuidString == null || uuidString.isBlank()) return null;
+
+        for (int i = 0; i < entries.size(); i++) {
+            BookEntry entry = entries.get(i);
+            if (entry.getBook().getUuid().toString().contains(uuidString)) {
+                return entry;
+            }
+        }
+        return null;
+    }
     /**
      * Знаходить усі записи, автор книги яких містить {@code author}
      * (порівняння без урахування регістру).

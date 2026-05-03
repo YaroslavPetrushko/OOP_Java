@@ -199,6 +199,7 @@ public class BookManager {
             System.out.println("  1. By author");
             System.out.println("  2. By genre");
             System.out.println("  3. By price range");
+            System.out.println("  4. By UUID");
             System.out.println("  0. Back to main menu");
             System.out.print("Criterion: ");
 
@@ -209,6 +210,7 @@ public class BookManager {
                 case 1 -> searchByAuthor();
                 case 2 -> searchByGenre();
                 case 3 -> searchByPriceRange();
+                case 4 -> searchByUuid();
                 case 0 -> System.out.println("  Cancelled.\n");
                 default -> System.out.println("  [!] Unknown criterion.\n");
             }
@@ -236,6 +238,12 @@ public class BookManager {
                         + " .. $" + String.format("%.2f", maxPrice) + "]");
     }
 
+    private void searchByUuid() {
+        String uuidString = readNonEmptyString("UUID: ");
+        BookEntry result = library.findByUuid(uuidString);
+        printSearchByIdResult(result, "Book with UUID: \"" + uuidString + "\"");
+    }
+
     /**
      * Виводить результати пошуку або повідомлення про відсутність збігів.
      * Показує книгу та кількість примірників.
@@ -253,6 +261,17 @@ public class BookManager {
         for (int i = 0; i < result.size(); i++) {
             System.out.println("  " + (i + 1) + ". " + result.get(i));
         }
+        System.out.println();
+    }
+
+    private void printSearchByIdResult(BookEntry result, String criterion) {
+        System.out.println("--- Search results [" + criterion + "] ---");
+        if (result==null) {
+            System.out.println("  No objects found matching the given criterion.\n");
+            return;
+        }
+        System.out.println(result.getBook());
+
         System.out.println();
     }
 
