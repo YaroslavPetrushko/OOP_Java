@@ -143,10 +143,10 @@ public class PaperBook extends Book {
     @Override
     public String toString() {
         return String.format(
-                "[PaperBook] \"%s\" by %s | %d | $%.2f | %s | %d pages" +
-                        " | %s | ed.%d | %.0f g",
+                "[PaperBook] \"%s\" by %s | %d | $%.2f | %s | %d pages"
+                        + " | %s | ed.%d | %.0f g%s",
                 getTitle(), getAuthor(), getYear(), getPrice(), getGenre(), getPages(),
-                publisher, edition, weightGrams);
+                publisher, edition, weightGrams, uuidSuffix());
     }
 
     /**

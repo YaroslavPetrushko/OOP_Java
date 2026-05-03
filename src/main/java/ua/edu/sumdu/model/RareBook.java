@@ -158,10 +158,10 @@ public class RareBook extends PaperBook {
     public String toString() {
         return String.format(
                 "[RareBook] \"%s\" by %s | %d | $%.2f | %s | %d pages"
-                        + " | %s | ed.%d | %.0f g | %s | est. $%.2f | acquired %d",
+                        + " | %s | ed.%d | %.0f g | %s | est. $%.2f | acquired %d%s",
                 getTitle(), getAuthor(), getYear(), getPrice(), getGenre(), getPages(),
                 getPublisher(), getEdition(), getWeightGrams(),
-                condition, estimatedValueUSD, acquisitionYear);
+                condition, estimatedValueUSD, acquisitionYear, uuidSuffix());
     }
 
     /**

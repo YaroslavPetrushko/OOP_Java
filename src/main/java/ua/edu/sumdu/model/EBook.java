@@ -147,10 +147,10 @@ public class EBook extends Book {
     @Override
     public String toString() {
         return String.format(
-                "[EBook] \"%s\" by %s | %d | $%.2f | %s | %d pages" +
-                        " | %s | %.1f MB | %s",
+                "[EBook] \"%s\" by %s | %d | $%.2f | %s | %d pages"
+                        + " | %s | %.1f MB | %s%s",
                 getTitle(), getAuthor(), getYear(), getPrice(), getGenre(), getPages(),
-                fileFormat, fileSizeMB, downloadUrl);
+                fileFormat, fileSizeMB, downloadUrl, uuidSuffix());
     }
 
     /**

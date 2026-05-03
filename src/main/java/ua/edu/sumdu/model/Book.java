@@ -259,6 +259,10 @@ public abstract class Book implements Comparable<Book>, Identifiable {
         this.pages = pages;
     }
 
+    protected String uuidSuffix() {
+        return " | id:" + getUuid().toString().substring(0, 8);
+    }
+
     // ---------------------------------------------------------------
     // Comparable
     // ---------------------------------------------------------------
@@ -291,8 +295,8 @@ public abstract class Book implements Comparable<Book>, Identifiable {
     @Override
     public String toString() {
         return String.format(
-                "[Book] \"%s\" by %s | %d | $%.2f | %s | %d pages",
-                title, author, year, price, genre, pages);
+                "[Book] \"%s\" by %s | %d | $%.2f | %s | %d pages%s",
+                title, author, year, price, genre, pages, uuidSuffix());
     }
 
     /**

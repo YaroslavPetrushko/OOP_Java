@@ -144,9 +144,9 @@ public class AudioBook extends Book {
         int minutes = durationMinutes % 60;
         return String.format(
                 "[AudioBook] \"%s\" by %s | %d | $%.2f | %s | %d pages"
-                        + " | narrated by %s | %dh %02dm | %s",
+                        + " | narrated by %s | %dh %02dm | %s%s",
                 getTitle(), getAuthor(), getYear(), getPrice(), getGenre(), getPages(),
-                narrator, hours, minutes, audioFormat);
+                narrator, hours, minutes, audioFormat, uuidSuffix());
     }
 
     /**
