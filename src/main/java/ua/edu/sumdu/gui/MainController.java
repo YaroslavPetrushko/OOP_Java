@@ -15,6 +15,19 @@ import java.util.UUID;
 
 /**
  * Контролер JavaFX GUI для Book Manager.
+ *
+ * <p>Прив'язується до {@code main.fxml} через атрибут {@code fx:controller}.
+ * Всі поля, позначені {@link FXML}, ін'єктуються автоматично при завантаженні FXML.
+ * Після ін'єкції викликається {@link #initialize()}.</p>
+ *
+ * <h2>Відповідальність</h2>
+ * <ul>
+ *   <li>Завантаження та збереження бібліотеки</li>
+ *   <li>Оновлення {@link ListView} через Observable-список</li>
+ *   <li>Динамічна побудова полів форми при зміні типу книги</li>
+ *   <li>Додавання книг до бібліотеки</li>
+ *   <li>Пошук книги за UUID</li>
+ * </ul>
  */
 public class MainController {
 
@@ -50,6 +63,7 @@ public class MainController {
     @FXML private TextField tfPages;
     @FXML private TextField tfQuantity;
 
+    /** Контейнер для динамічних полів (змінюється при зміні cbType). */
     @FXML private VBox specificFieldsBox;
 
     // ---- Search ----
@@ -75,6 +89,17 @@ public class MainController {
     // Ініціалізація
     // ================================================================
 
+    /**
+     * Викликається JavaFX після ін'єкції всіх @FXML-полів.
+     *
+     * <p>Виконує:</p>
+     * <ol>
+     *   <li>Підключення сховищ та завантаження даних</li>
+     *   <li>Налаштування ComboBox-ів (type, genre)</li>
+     *   <li>Налаштування cell factory для ListView</li>
+     *   <li>Початкову побудову специфічних полів форми</li>
+     * </ol>
+     */
     @FXML
     public void initialize() {
         // ---- Сховища та бібліотека ----
@@ -121,6 +146,7 @@ public class MainController {
     // Завантаження / збереження
     // ================================================================
 
+    /** Завантажує дані при старті: спочатку TXT, якщо порожньо — JSON. */
     private void loadData() {
         txtStorage.load(library);
         if (library.getEntryCount() == 0) {
@@ -128,11 +154,13 @@ public class MainController {
         }
     }
 
+    /** Зберігає колекцію в обидва формати. Викликається при закритті вікна та кнопкою. */
     public void saveAll() {
         txtStorage.save(library);
         jsonStorage.save(library);
     }
 
+    /** Оновлює Observable-список з поточного стану бібліотеки. */
     private void refreshList() {
         observableEntries.clear();
         for (int i = 0; i < library.getEntryCount(); i++) {
@@ -145,12 +173,18 @@ public class MainController {
     // Обробники подій (@FXML)
     // ================================================================
 
+    /**
+     * Кнопка «💾 Save» — зберігає та оновлює статус.
+     */
     @FXML
     private void handleSave() {
         saveAll();
         setStatus("Saved " + library.getEntryCount() + " book(s).", false);
     }
 
+    /**
+     * Клік на рядок ListView → копіює UUID книги в поле пошуку.
+     */
     @FXML
     private void handleListClick() {
         BookEntry selected = bookListView.getSelectionModel().getSelectedItem();
@@ -160,11 +194,17 @@ public class MainController {
         }
     }
 
+    /**
+     * Зміна типу книги в ComboBox → перебудовує специфічні поля форми.
+     */
     @FXML
     private void handleTypeChange() {
         rebuildSpecificFields();
     }
 
+    /**
+     * Кнопка «Add Book» — зчитує форму, створює об'єкт, додає до бібліотеки.
+     */
     @FXML
     private void handleAddBook() {
         try {
@@ -218,6 +258,9 @@ public class MainController {
         }
     }
 
+    /**
+     * Кнопка «Find» або Enter у полі пошуку UUID.
+     */
     @FXML
     private void handleUuidSearch() {
         String input = tfUuidSearch.getText().trim();
@@ -258,6 +301,12 @@ public class MainController {
     // Динамічна форма
     // ================================================================
 
+    /**
+     * Перебудовує блок специфічних полів відповідно до обраного типу книги.
+     *
+     * <p>Очищує {@code specificFieldsBox} та заповнює потрібними рядками форми.
+     * Кожен рядок — {@link HBox} з лейблом і текстовим полем (або ComboBox).</p>
+     */
     private void rebuildSpecificFields() {
         specificFieldsBox.getChildren().clear();
         String type = cbType.getValue();
@@ -330,6 +379,13 @@ public class MainController {
     // Форматування результату пошуку
     // ================================================================
 
+    /**
+     * Будує повний текстовий опис знайденої книги для відображення у TextArea.
+     *
+     * @param b        знайдена книга
+     * @param quantity кількість примірників
+     * @return форматований рядок
+     */
     private String buildFullInfo(Book b, int quantity) {
         StringBuilder sb = new StringBuilder();
         sb.append("✓  Found!\n");
@@ -349,6 +405,12 @@ public class MainController {
         return sb.toString();
     }
 
+    /**
+     * Повертає рядок із полями, специфічними для типу книги.
+     *
+     * @param b книга будь-якого підкласу
+     * @return форматований рядок
+     */
     private String buildTypeSpecificInfo(Book b) {
         if (b instanceof RareBook rb) {
             return String.format(
@@ -379,6 +441,12 @@ public class MainController {
     // Статус
     // ================================================================
 
+    /**
+     * Встановлює текст і колір у рядку статусу.
+     *
+     * @param msg     повідомлення
+     * @param isError {@code true} — червоний, {@code false} — зелений
+     */
     private void setStatus(String msg, boolean isError) {
         statusLabel.setText(msg);
         statusLabel.getStyleClass().setAll(isError ? "status-error" : "status-ok");
@@ -388,6 +456,12 @@ public class MainController {
     // UI-хелпери для динамічної форми
     // ================================================================
 
+    /**
+     * Створює стилізований TextField із підказкою.
+     *
+     * @param prompt текст підказки
+     * @return {@link TextField}
+     */
     private TextField field(String prompt) {
         TextField tf = new TextField();
         tf.setPromptText(prompt);
@@ -396,6 +470,13 @@ public class MainController {
         return tf;
     }
 
+    /**
+     * Будує рядок форми: лейбл (100 px) + контрол.
+     *
+     * @param labelText текст лейблу
+     * @param control   будь-який {@link Control}
+     * @return {@link HBox} рядку форми
+     */
     private HBox row(String labelText, Control control) {
         Label lbl = new Label(labelText);
         lbl.setMinWidth(100);
@@ -411,6 +492,13 @@ public class MainController {
     // Хелпери валідації вводу
     // ================================================================
 
+    /**
+     * Зчитує непорожній рядок або кидає {@link InvalidBookDataException}.
+     *
+     * @param tf        поле введення
+     * @param fieldName назва поля для повідомлення
+     * @return непорожній рядок після trim
+     */
     private String requireNonEmpty(TextField tf, String fieldName) {
         String v = tf.getText().trim();
         if (v.isEmpty()) {
@@ -419,6 +507,13 @@ public class MainController {
         return v;
     }
 
+    /**
+     * Парсить ціле число або кидає {@link InvalidBookDataException}.
+     *
+     * @param tf        поле введення
+     * @param fieldName назва поля
+     * @return ціле число
+     */
     private int parseIntField(TextField tf, String fieldName) {
         try {
             return Integer.parseInt(tf.getText().trim());
@@ -427,6 +522,13 @@ public class MainController {
         }
     }
 
+    /**
+     * Парсить дійсне число (підтримує кому і крапку) або кидає виключення.
+     *
+     * @param tf        поле введення
+     * @param fieldName назва поля
+     * @return double-значення
+     */
     private double parseDoubleField(TextField tf, String fieldName) {
         try {
             return Double.parseDouble(tf.getText().trim().replace(',', '.'));

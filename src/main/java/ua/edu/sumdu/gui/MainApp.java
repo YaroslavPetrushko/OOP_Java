@@ -10,10 +10,21 @@ import java.net.URL;
 import java.util.Objects;
 
 /**
- * JavaFX GUI для Book Manager.
+ * Точка входу JavaFX — завантажує {@code main.fxml} і відкриває вікно.
+ *
+ * <p>Вся логіка інтерфейсу знаходиться у {@link MainController}.</p>
+ *
+ * <h2>Запуск</h2>
+ * <pre>mvn javafx:run</pre>
  */
 public class MainApp extends Application {
 
+    /**
+     * Завантажує FXML, підключає CSS і відображає основне вікно.
+     *
+     * @param stage первинна сцена JavaFX
+     * @throws Exception якщо FXML або CSS не знайдено
+     */
     @Override
     public void start(Stage stage) throws Exception {
 
@@ -25,9 +36,15 @@ public class MainApp extends Application {
         FXMLLoader loader = new FXMLLoader(fxmlUrl);
         Parent root = loader.load();
 
+        // Завантаження CSS
+        URL cssUrl = Objects.requireNonNull(
+                getClass().getResource("styles.css"),
+                "Cannot find styles.css in classpath");
+        root.getStylesheets().add(cssUrl.toExternalForm());
+
         // Налаштування сцени
         Scene scene = new Scene(root, 1180, 730);
-        stage.setTitle("Book Manager — GUI");
+        stage.setTitle("Book Manager — UUID");
         stage.setScene(scene);
         stage.setMinWidth(900);
         stage.setMinHeight(600);
@@ -39,6 +56,11 @@ public class MainApp extends Application {
         stage.show();
     }
 
+    /**
+     * Точка входу JVM (для запуску без javafx-maven-plugin).
+     *
+     * @param args аргументи командного рядка
+     */
     public static void main(String[] args) {
         launch(args);
     }
