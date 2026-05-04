@@ -63,6 +63,13 @@ public class MainApp extends Application {
     private TextField tfEstimatedValue, tfAcquisitionYear;
 
     // ----------------------------------------------------------------
+    // Пошук за UUID
+    // ----------------------------------------------------------------
+
+    private TextField tfUuidSearch;
+    private TextArea  taSearchResult;
+
+    // ----------------------------------------------------------------
     // Рядок статусу
     // ----------------------------------------------------------------
 
@@ -184,6 +191,15 @@ public class MainApp extends Application {
             }
         });
 
+        // Підставляємо UUID у поле пошуку
+        bookListView.setOnMouseClicked(e -> {
+            BookEntry selected = bookListView.getSelectionModel().getSelectedItem();
+            if (selected != null && tfUuidSearch != null) {
+                tfUuidSearch.setText(selected.getBook().getUuid().toString());
+                setStatus("UUID copied to search field. Click 'Find' to look up.",false);
+            }
+        });
+
         VBox.setVgrow(bookListView, Priority.ALWAYS);
 
         VBox box = new VBox(10, heading, bookListView);
@@ -196,10 +212,11 @@ public class MainApp extends Application {
     // ----------------------------------------------------------------
 
     private TabPane buildRightPanel() {
-        Tab addTab    = new Tab(" Add Book",        buildAddBookPanel());
+        Tab addTab    = new Tab(" Add Book", buildAddBookPanel());
+        Tab searchTab = new Tab(" Search Book", buildSearchPanel());
         addTab.setClosable(false);
 
-        TabPane tabs = new TabPane(addTab);
+        TabPane tabs = new TabPane(addTab, searchTab);
         tabs.setTabMinWidth(150);
         return tabs;
     }
@@ -373,6 +390,126 @@ public class MainApp extends Application {
     }
 
     // ----------------------------------------------------------------
+    // Вкладка «Search by UUID»
+    // ----------------------------------------------------------------
+
+    private VBox buildSearchPanel() {
+        Label heading = sectionLabel("Search by UUID");
+
+        tfUuidSearch = styledField("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+        tfUuidSearch.setFont(javafx.scene.text.Font.font("Monospaced", 12));
+
+        Button btnFind = new Button("Find");
+        btnFind.setMinWidth(70);
+        btnFind.setOnAction(e -> handleUuidSearch());
+        // Enter у полі вводу також запускає пошук
+        tfUuidSearch.setOnAction(e -> handleUuidSearch());
+
+        HBox searchRow = new HBox(8, tfUuidSearch, btnFind);
+        searchRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(tfUuidSearch, Priority.ALWAYS);
+
+        taSearchResult = new TextArea();
+        taSearchResult.setEditable(false);
+        taSearchResult.setWrapText(true);
+        taSearchResult.setFont(javafx.scene.text.Font.font("Monospaced", 13));
+        taSearchResult.setPromptText("Result will appear here…");
+        taSearchResult.setStyle(
+                "-fx-border-radius: 6; -fx-font-family: monospace;");
+        VBox.setVgrow(taSearchResult, Priority.ALWAYS);
+
+        Label hint = new Label(
+                "💡 Click any book in the left list to auto-fill the UUID field.");
+        hint.setStyle("-fx-font-size: 11px;");
+
+        VBox box = new VBox(12, heading, searchRow, taSearchResult, hint);
+        box.setPadding(new Insets(16));
+        return box;
+    }
+
+    private void handleUuidSearch() {
+        String input = tfUuidSearch.getText().trim();
+
+        if (input.isEmpty()) {
+            taSearchResult.setText("Please enter a UUID.");
+            setStatus("UUID field is empty.", true);
+            return;
+        }
+
+        // Перевірка формату UUID
+        try {
+            UUID.fromString(input);
+        } catch (IllegalArgumentException ex) {
+            taSearchResult.setText(
+                    " Invalid UUID format.\n\n"
+                            + "Expected:\n"
+                            + "  xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\n\n"
+                            + "Got:\n  " + input);
+            setStatus("✗ Invalid UUID format.", true);
+            return;
+        }
+
+        BookEntry entry = library.findByUuid(input);
+
+        if (entry == null) {
+            taSearchResult.setText(
+                    "✗  Not found.\n\n"
+                            + "No book with UUID:\n  " + input + "\n\n"
+                            + "Make sure the library is up to date.");
+            setStatus("✗ Book not found for UUID: " + input.substring(0, 8) + "…", true);
+        } else {
+            Book b = entry.getBook();
+            taSearchResult.setText(buildFullInfo(b, entry.getQuantity()));
+            setStatus("✓ Found: " + b.getShortInfo(), false);
+        }
+    }
+
+    private String buildFullInfo(Book b, int quantity) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Found Book\n");
+        sb.append("─".repeat(48)).append("\n");
+        sb.append(String.format("UUID:     %s%n", b.getUuid()));
+        sb.append(String.format("Type:     %s%n", b.getClass().getSimpleName()));
+        sb.append(String.format("Title:    %s%n", b.getTitle()));
+        sb.append(String.format("Author:   %s%n", b.getAuthor()));
+        sb.append(String.format("Year:     %d%n", b.getYear()));
+        sb.append(String.format("Price:    $%.2f%n", b.getPrice()));
+        sb.append(String.format("Genre:    %s%n", b.getGenre()));
+        sb.append(String.format("Pages:    %d%n", b.getPages()));
+        sb.append("─".repeat(48)).append("\n");
+        sb.append(buildTypeSpecificInfo(b));
+        sb.append("─".repeat(48)).append("\n");
+        sb.append(String.format("Quantity: %d copy(ies)%n", quantity));
+        return sb.toString();
+    }
+
+    private String buildTypeSpecificInfo(Book b) {
+        if (b instanceof RareBook rb) {
+            return String.format(
+                    "Publisher: %s%nEdition:   %d%nWeight:    %.0f g%n"
+                            + "Condition: %s%nEst.Value: $%.2f%nAcquired:  %d%n",
+                    rb.getPublisher(), rb.getEdition(), rb.getWeightGrams(),
+                    rb.getCondition(), rb.getEstimatedValueUSD(), rb.getAcquisitionYear());
+        }
+        if (b instanceof PaperBook pb) {
+            return String.format(
+                    "Publisher: %s%nEdition:   %d%nWeight:    %.0f g%n",
+                    pb.getPublisher(), pb.getEdition(), pb.getWeightGrams());
+        }
+        if (b instanceof EBook eb) {
+            return String.format(
+                    "Format:    %s%nSize:      %.1f MB%nURL:       %s%n",
+                    eb.getFileFormat(), eb.getFileSizeMB(), eb.getDownloadUrl());
+        }
+        if (b instanceof AudioBook ab) {
+            return String.format(
+                    "Narrator:  %s%nDuration:  %d min%nFormat:    %s%n",
+                    ab.getNarrator(), ab.getDurationMinutes(), ab.getAudioFormat());
+        }
+        return "";
+    }
+
+    // ----------------------------------------------------------------
     // Status bar
     // ----------------------------------------------------------------
 
@@ -419,10 +556,17 @@ public class MainApp extends Application {
                 "-fx-border-radius: 4; -fx-background-radius: 4;");
     }
 
+    private Button styledButton(String text, String color) {
+        Button btn = new Button(text);
+        btn.setStyle(
+                "-fx-font-weight: bold; -fx-border-radius: 4; -fx-background-radius: 4; -fx-padding: 7 16;");
+        return btn;
+    }
+
     private HBox labeledRow(String labelText, Control control) {
         Label lbl = new Label(labelText);
         lbl.setMinWidth(100);
-        lbl.setStyle("-fx-text-fill: #bac2de; -fx-font-size: 12px;");
+        lbl.setStyle("-fx-font-size: 12px;");
         HBox.setHgrow(control, Priority.ALWAYS);
         control.setMaxWidth(Double.MAX_VALUE);
         HBox row = new HBox(8, lbl, control);
