@@ -7,6 +7,11 @@
 
 <!--
     Book Manager — main layout
+    src/main/resources/ua/edu/sumdu/gui/main.fxml
+
+    Усі стилі визначені у styles.css.
+    Динамічний вміст (specificFieldsBox, items у ComboBox,
+    cell factory списку) заповнюється у MainController#initialize.
 -->
 <BorderPane
         xmlns="http://javafx.openjfx.com/javafx/21"
@@ -17,13 +22,13 @@
     <top>
         <HBox styleClass="header" alignment="CENTER_LEFT">
 
-            <Label text="Book Manager — GUI"
+            <Label text="📚  Book Manager — GUI"
                    styleClass="header-title"/>
 
             <Region HBox.hgrow="ALWAYS"/>
 
             <Button fx:id="btnSave"
-                    text="Save"
+                    text="💾  Save"
                     styleClass="btn-accent-blue"
                     onAction="#handleSave"/>
         </HBox>
@@ -53,7 +58,7 @@
                      tabMinWidth="150">
 
                 <!-- Tab 1: Add Book -->
-                <Tab text="Add Book" closable="false">
+                <Tab text="➕  Add Book" closable="false">
 
                     <ScrollPane fx:id="formScroll"
                                 fitToWidth="true"
@@ -166,7 +171,7 @@
                 </Tab>
 
                 <!-- Tab 2: Search by UUID -->
-                <Tab text="Search by UUID" closable="false">
+                <Tab text="🔍  Search by UUID" closable="false">
 
                     <VBox styleClass="search-panel" spacing="12.0">
 
@@ -198,7 +203,7 @@
                                   styleClass="result-area"
                                   VBox.vgrow="ALWAYS"/>
 
-                        <Label text="Click any book in the list to auto-fill the UUID field."
+                        <Label text="💡 Click any book in the list to auto-fill the UUID field."
                                styleClass="hint-label"/>
                     </VBox>
                 </Tab>
