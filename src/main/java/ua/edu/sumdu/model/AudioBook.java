@@ -131,12 +131,9 @@ public class AudioBook extends Book {
     // ---------------------------------------------------------------
 
     /**
-     * Повертає рядкове представлення аудіокниги.
+     * Повертає рядкове представлення аудіокниги зі скороченим UUID.
      *
-     * <p>Перевизначає {@link Book#toString()} — при обробці через
-     * посилання типу {@code Book} викликається саме цей метод.</p>
-     *
-     * @return форматований рядок з усіма полями
+     * @return форматований рядок
      */
     @Override
     public String toString() {
@@ -144,9 +141,9 @@ public class AudioBook extends Book {
         int minutes = durationMinutes % 60;
         return String.format(
                 "[AudioBook] \"%s\" by %s | %d | $%.2f | %s | %d pages"
-                        + " | narrated by %s | %dh %02dm | %s",
+                        + " | narrated by %s | %dh %02dm | %s%s",
                 getTitle(), getAuthor(), getYear(), getPrice(), getGenre(), getPages(),
-                narrator, hours, minutes, audioFormat);
+                narrator, hours, minutes, audioFormat, uuidSuffix());
     }
 
     /**

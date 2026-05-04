@@ -133,20 +133,17 @@ public class PaperBook extends Book {
     // ---------------------------------------------------------------
 
     /**
-     * Повертає рядкове представлення паперової книги.
+     * Повертає рядкове представлення паперової книги зі скороченим UUID.
      *
-     * <p>Перевизначає {@link Book#toString()} — при виклику через посилання
-     * базового типу {@code Book} буде виконано саме цей метод (поліморфізм).</p>
-     *
-     * @return форматований рядок з усіма полями
+     * @return форматований рядок
      */
     @Override
     public String toString() {
         return String.format(
-                "[PaperBook] \"%s\" by %s | %d | $%.2f | %s | %d pages" +
-                        " | %s | ed.%d | %.0f g",
+                "[PaperBook] \"%s\" by %s | %d | $%.2f | %s | %d pages"
+                        + " | %s | ed.%d | %.0f g%s",
                 getTitle(), getAuthor(), getYear(), getPrice(), getGenre(), getPages(),
-                publisher, edition, weightGrams);
+                publisher, edition, weightGrams, uuidSuffix());
     }
 
     /**
