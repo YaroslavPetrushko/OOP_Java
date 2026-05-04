@@ -25,6 +25,14 @@ import java.util.Scanner;
  *   <li>Завершити роботу</li>
  * </ol>
  *
+ * <p>Підменю пошуку:</p>
+ * <ol>
+ *   <li>За автором</li>
+ *   <li>За жанром</li>
+ *   <li>За діапазоном ціни</li>
+ *   <li>За UUID</li>
+ * </ol>
+ *
  * <p>Ієрархія підтримуваних класів:</p>
  * <pre>
  * Book
@@ -123,8 +131,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v9.1            ║");
-        System.out.println("║ Library | Comparator λ | TXT+JSON storage║");
+        System.out.println("║            BOOK MANAGER  v10.0           ║");
+        System.out.println("║  UUID | Identifiable | TXT+JSON storage  ║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -192,7 +200,10 @@ public class BookManager {
     // ---------------------------------------------------------------
 
     /**
-     * Підменю вибору критерію пошуку. {@code 0} — повернення до меню.
+     * Підменю вибору критерію пошуку.
+     *
+     * <p>Пункти 1–3 — класичний пошук; пункт {@code 4} — пошук за UUID;
+     * пункт {@code 0} — повернення до головного меню.</p>
      */
     private void searchMenu() {
             System.out.println("\n--- Search ---");
@@ -216,12 +227,14 @@ public class BookManager {
             }
     }
 
+    // Пошук за автором
     private void searchByAuthor() {
         String author = readNonEmptyString("Author name: ");
         ArrayList<BookEntry> result = library.findByAuthor(author);
         printSearchResult(result, "author contains \"" + author + "\"");
     }
 
+    // Пошук за жанром
     private void searchByGenre() {
         Genre genre = readEnum(Genre.values(), "Genre");
         System.out.println();
@@ -229,6 +242,7 @@ public class BookManager {
         printSearchResult(result, "genre = " + genre);
     }
 
+    // Пошук за діапазоном ціни
     private void searchByPriceRange() {
         double minPrice = readDouble("Min price ($): ");
         double maxPrice = readDouble("Max price ($): ");
@@ -238,10 +252,12 @@ public class BookManager {
                         + " .. $" + String.format("%.2f", maxPrice) + "]");
     }
 
+    // Пошук книги за UUID
+    // Приймає скорочену версію ID та шукає за збігом
     private void searchByUuid() {
-        String uuidString = readNonEmptyString("UUID: ");
+        String uuidString = readNonEmptyString("Enter UUID: ");
         BookEntry result = library.findByUuid(uuidString);
-        printSearchByIdResult(result, "Book with UUID: \"" + uuidString + "\"");
+        printSearchByIdResult(result, "UUID = " + uuidString + "");
     }
 
     /**
@@ -267,11 +283,12 @@ public class BookManager {
     private void printSearchByIdResult(BookEntry result, String criterion) {
         System.out.println("--- Search results [" + criterion + "] ---");
         if (result==null) {
-            System.out.println("  No objects found matching the given criterion.\n");
+            System.out.println("  No book found with this UUID.\n");
             return;
         }
-        System.out.println(result.getBook());
-
+        System.out.println("  " + result.getBook().toString());
+        System.out.println("  Copies in library: " + result.getQuantity());
+        System.out.println("  Full UUID: " + result.getBook().getUuid());
         System.out.println();
     }
 

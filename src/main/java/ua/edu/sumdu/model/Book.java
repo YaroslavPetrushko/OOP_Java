@@ -8,9 +8,8 @@ import java.time.Year;
  * Абстрактний базовий клас, що представляє книгу з основними бібліографічними
  * характеристиками.
  *
- * <p>Є спільним батьківським типом для {@link EBook}, {@link AudioBook}
- * та {@link PaperBook}. Оголошено {@code abstract} — безпосереднє
- * створення екземплярів забороняється; слід використовувати конкретні підкласи.</p>
+ * <p>Реалізує {@link Identifiable} — кожен об'єкт має стабільний {@link UUID},
+ * що генерується автоматично при створенні та зберігається у файлах.</p>
  *
  * <p>Реалізує {@link Comparable}{@code <Book>}: природний порядок —
  * лексикографічний за полем {@code title} (без урахування регістру).
@@ -19,6 +18,7 @@ import java.time.Year;
  *
  * <p>Поля:</p>
  * <ul>
+ *   <li>{@code uuid}   — унікальний ідентифікатор (генерується автоматично)</li>
  *   <li>{@code title}  — назва книги</li>
  *   <li>{@code author} — ім'я автора</li>
  *   <li>{@code year}   — рік видання [1, поточний рік]</li>
@@ -40,7 +40,15 @@ public abstract class Book implements Comparable<Book>, Identifiable {
     // Поля екземпляра
     // ---------------------------------------------------------------
 
-    // Унікальний ідентифікатор об'єкта
+    /**
+     * Унікальний ідентифікатор об'єкта.
+     *
+     * <p>Зберігається як рядок для Gson-сумісності: бібліотека серіалізує
+     * це поле напряму в JSON без додаткових адаптерів. При відновленні з файлу
+     * значення встановлюється або Gson (JSON), або методом {@link #setUuid(String)}
+     * (TXT). Якщо поле виявляється {@code null} (старий файл без UUID),
+     * воно ініціалізується ліниво у {@link #getUuid()}.</p>
+     */
     private String uuid;
 
     private String title;
@@ -56,7 +64,7 @@ public abstract class Book implements Comparable<Book>, Identifiable {
 
     /**
      * Створює об'єкт {@code Book} із повною перевіркою всіх параметрів.
-     * Викликається з конструкторів конкретних підкласів через {@code super(...)}.
+     * UUID генерується автоматично.
      *
      * @param title     назва книги; не може бути {@code null} або порожнім
      * @param author    ім'я автора; не може бути {@code null} або порожнім
@@ -67,10 +75,7 @@ public abstract class Book implements Comparable<Book>, Identifiable {
      * @throws InvalidBookDataException якщо будь-який із параметрів некоректний
      */
     public Book(String title, String author, int year, double price, Genre genre, int pages) {
-        // UUID генерується автоматично
         this.uuid = UUID.randomUUID().toString();
-
-        // Використовуємо сетери, щоб не дублювати логіку валідації
         setTitle(title);
         setAuthor(author);
         setYear(year);
@@ -84,7 +89,9 @@ public abstract class Book implements Comparable<Book>, Identifiable {
     // ---------------------------------------------------------------
 
     /**
-     * Конструктор копіювання — створює незалежну копію переданого об'єкта.
+     * Конструктор копіювання — створює незалежну копію із власним UUID.
+     *
+     * <p>Копія отримує <em>новий</em> UUID, оскільки є самостійним об'єктом.</p>
      *
      * @param other джерело для копіювання; не може бути {@code null}
      * @throws InvalidBookDataException якщо {@code other} є {@code null}
@@ -106,6 +113,15 @@ public abstract class Book implements Comparable<Book>, Identifiable {
     // Identifiable
     // ---------------------------------------------------------------
 
+    /**
+     * Повертає UUID об'єкта.
+     *
+     * <p>Якщо поле {@code uuid} рівне {@code null} (наприклад, Gson
+     * відновив об'єкт зі старого файлу без поля uuid), новий UUID
+     * генерується і зберігається ліниво.</p>
+     *
+     * @return UUID цього об'єкта; ніколи не {@code null}
+     */
     @Override
     public UUID getUuid() {
         if (uuid == null) {
@@ -114,6 +130,13 @@ public abstract class Book implements Comparable<Book>, Identifiable {
         return UUID.fromString(uuid);
     }
 
+    /**
+     * Відновлює UUID з рядка при завантаженні з TXT-файлу.
+     *
+     * <p>Якщо рядок некоректний або {@code null} — генерується новий UUID.</p>
+     *
+     * @param uuidString рядкове представлення UUID
+     */
     public void setUuid(String uuidString) {
         if (uuidString == null || uuidString.isBlank()) {
             this.uuid = UUID.randomUUID().toString();
@@ -259,6 +282,31 @@ public abstract class Book implements Comparable<Book>, Identifiable {
         this.pages = pages;
     }
 
+    // ---------------------------------------------------------------
+    // Короткий та повний вивід
+    // ---------------------------------------------------------------
+
+    /**
+     * Повертає короткий рядок для списку: тип, назва, автор та скорочений UUID.
+     *
+     * <p>Використовується у JavaFX {@code ListView} та при виводі UUID-пошуку.</p>
+     *
+     * <p>Приклад: {@code [EBook] "Clean Code" by Robert C. Martin | uuid: 3f2a1b4c}</p>
+     *
+     * @return короткий рядок-опис
+     */
+    public String getShortInfo() {
+        return "[" + getClass().getSimpleName() + "] \""
+                + title + "\" by " + author
+                + " | uuid: " + getUuid().toString().substring(0, 8);
+    }
+
+    /**
+     * Повертає суфікс з коротким UUID (перші 8 символів) для вставки в кінець
+     * рядка {@code toString()} підкласів.
+     *
+     * @return рядок виду {@code  | id:3f2a1b4c}
+     */
     protected String uuidSuffix() {
         return " | id:" + getUuid().toString().substring(0, 8);
     }
@@ -266,16 +314,12 @@ public abstract class Book implements Comparable<Book>, Identifiable {
     // ---------------------------------------------------------------
     // Comparable
     // ---------------------------------------------------------------
+
     /**
-     * Порівнює цю книгу з іншою за назвою ({@code title})
-     * в лексикографічному порядку без урахування регістру.
+     * Порівнює цю книгу з іншою за назвою (без урахування регістру).
      *
-     * <p>Критерій є стабільним: поле {@code title} присутнє в кожному
-     * об'єкті ієрархії та не може бути порожнім (перевіряється в сетері).</p>
-     *
-     * @param other інша книга для порівняння
-     * @return від'ємне число, нуль або додатне число, якщо ця книга
-     *         лексикографічно менша, рівна або більша за {@code other}
+     * @param other інша книга
+     * @return від'ємне число, нуль або додатне число
      */
     @Override
     public int compareTo(Book other) {
@@ -287,10 +331,9 @@ public abstract class Book implements Comparable<Book>, Identifiable {
     // ---------------------------------------------------------------
 
     /**
-     * Повертає форматований рядок із полями базового класу.
-     * Перевизначається у кожному конкретному підкласі.
+     * Повертає рядкове представлення базового класу (з UUID-суфіксом).
      *
-     * @return рядкове представлення книги
+     * @return форматований рядок
      */
     @Override
     public String toString() {
@@ -300,7 +343,7 @@ public abstract class Book implements Comparable<Book>, Identifiable {
     }
 
     /**
-     * Порівнює два об'єкти за всіма полями базового класу.
+     * Порівнює два об'єкти за полями базового класу.
      *
      * @param o об'єкт для порівняння
      * @return {@code true}, якщо всі поля рівні
@@ -319,7 +362,7 @@ public abstract class Book implements Comparable<Book>, Identifiable {
     }
 
     /**
-     * Повертає хеш-код об'єкта на основі всіх полів.
+     * Повертає хеш-код (UUID не враховується, як і в {@code equals}).
      *
      * @return хеш-код
      */
