@@ -435,7 +435,20 @@ public class BookManager {
             System.out.println("    9. File size (MB)");
             System.out.println("   10. Download URL");
         } else if (book instanceof AudioBook) {
-            // Continue ...
+            System.out.println("    8. Narrator");
+            System.out.println("    9. Duration (minutes)");
+            System.out.println("   10. Audio format");
+        } else if (book instanceof RareBook) {
+            System.out.println("    8. Publisher");
+            System.out.println("    9. Edition");
+            System.out.println("   10. Weight (g)");
+            System.out.println("   11. Condition");
+            System.out.println("   12. Estimated value ($)");
+            System.out.println("   13. Acquisition year");
+        } else if (book instanceof PaperBook) {
+            System.out.println("    8. Publisher");
+            System.out.println("    9. Edition");
+            System.out.println("   10. Weight (g)");
         }
         System.out.println("    0. Cancel");
 
@@ -462,17 +475,60 @@ public class BookManager {
         }
     }
 
+    /**
+     * Застосовує зміну атрибута до книги або запису за обраним номером.
+     * Спочатку перевіряє загальні поля (1–7), потім делегує до методу підтипу.
+     *
+     * @param entry запис (для зміни quantity)
+     * @param book  книга (для зміни решти полів)
+     * @param attr  номер обраного атрибута
+     * @return {@code true} якщо атрибут розпізнано і змінено
+     */
     private boolean applyModification(BookEntry entry, Book book, int attr) {
-        if (attr == 1) { book.setTitle(readNonEmptyString("New title:  ")); return true; }
-        if (attr == 2) { book.setAuthor(readNonEmptyString("New author: ")); return true; }
-        if (attr == 3) { book.setYear(readInt("New year:   "));  return true; }
-        if (attr == 4) { book.setPrice(readDouble("New price ($): ")); return true; }
-        if (attr == 5) { book.setGenre(readEnum(Genre.values(), "New genre")); return true; }
-        if (attr == 6) { book.setPages(readInt("New pages:  ")); return true; }
-        if (attr == 7) { entry.setQuantity(readInt("New quantity: ")); return true; }
+        if (attr == 1) { book.setTitle(readNonEmptyString("New title:  "));      return true; }
+        if (attr == 2) { book.setAuthor(readNonEmptyString("New author: "));     return true; }
+        if (attr == 3) { book.setYear(readInt("New year:   "));                  return true; }
+        if (attr == 4) { book.setPrice(readDouble("New price ($): "));           return true; }
+        if (attr == 5) { book.setGenre(readEnum(Genre.values(), "New genre"));   return true; }
+        if (attr == 6) { book.setPages(readInt("New pages:  "));                 return true; }
+        if (attr == 7) { entry.setQuantity(readInt("New quantity: "));           return true; }
 
-        // Специфічні поля для різних класів
-        // if (attr >7) instance of EBook / AudioBook / ...
+        // Специфічні поля — порядок важливий: RareBook перед PaperBook
+        if (book instanceof RareBook  rb) return applyRareBookModification(rb,  attr);
+        if (book instanceof PaperBook pb) return applyPaperBookModification(pb, attr);
+        if (book instanceof EBook     eb) return applyEBookModification(eb,     attr);
+        if (book instanceof AudioBook ab) return applyAudioBookModification(ab, attr);
+        return false;
+    }
+
+    private boolean applyEBookModification(EBook eb, int attr) {
+        if (attr == 8)  { eb.setFileFormat(readNonEmptyString("New file format: "));      return true; }
+        if (attr == 9)  { eb.setFileSizeMB(readDouble("New file size (MB): "));           return true; }
+        if (attr == 10) { eb.setDownloadUrl(readNonEmptyString("New download URL: "));    return true; }
+        return false;
+    }
+
+    private boolean applyAudioBookModification(AudioBook ab, int attr) {
+        if (attr == 8)  { ab.setNarrator(readNonEmptyString("New narrator: "));           return true; }
+        if (attr == 9)  { ab.setDurationMinutes(readInt("New duration (minutes): "));     return true; }
+        if (attr == 10) { ab.setAudioFormat(readNonEmptyString("New audio format: "));    return true; }
+        return false;
+    }
+
+    private boolean applyPaperBookModification(PaperBook pb, int attr) {
+        if (attr == 8)  { pb.setPublisher(readNonEmptyString("New publisher: "));         return true; }
+        if (attr == 9)  { pb.setEdition(readInt("New edition: "));                        return true; }
+        if (attr == 10) { pb.setWeightGrams(readDouble("New weight (g): "));              return true; }
+        return false;
+    }
+
+    private boolean applyRareBookModification(RareBook rb, int attr) {
+        if (attr == 8)  { rb.setPublisher(readNonEmptyString("New publisher: "));         return true; }
+        if (attr == 9)  { rb.setEdition(readInt("New edition: "));                        return true; }
+        if (attr == 10) { rb.setWeightGrams(readDouble("New weight (g): "));              return true; }
+        if (attr == 11) { rb.setCondition(readEnum(BookCondition.values(), "New condition")); return true; }
+        if (attr == 12) { rb.setEstimatedValueUSD(readDouble("New estimated value ($): ")); return true; }
+        if (attr == 13) { rb.setAcquisitionYear(readInt("New acquisition year: "));       return true; }
         return false;
     }
 
