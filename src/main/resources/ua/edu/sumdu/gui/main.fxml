@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<!--
+    Book Manager — main layout
+    src/main/resources/ua/edu/sumdu/gui/main.fxml
+
+    Усі стилі визначені у styles.css.
+    Динамічний вміст (specificFieldsBox, items у ComboBox,
+    cell factory списку) заповнюється у MainController#initialize.
+-->
+<BorderPane
+        xmlns="http://javafx.openjfx.com/javafx/21"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="ua.edu.sumdu.gui.MainController">
+
+    <!-- TOP — header bar -->
+    <top>
+        <HBox styleClass="header" alignment="CENTER_LEFT">
+
+            <Label text="📚  Book Manager — GUI"
+                   styleClass="header-title"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button fx:id="btnSave"
+                    text="💾  Save"
+                    styleClass="btn-accent-blue"
+                    onAction="#handleSave"/>
+        </HBox>
+    </top>
+
+    <!-- CENTER — SplitPane -->
+    <center>
+        <SplitPane dividerPositions="0.36"
+                   styleClass="main-split">
+
+            <!-- LEFT PANEL — book list-->
+            <VBox styleClass="left-panel">
+
+                <Label fx:id="listHeading"
+                       text="Library"
+                       styleClass="section-label"/>
+
+                <ListView fx:id="bookListView"
+                          styleClass="book-list"
+                          onMouseClicked="#handleListClick"
+                          VBox.vgrow="ALWAYS"/>
+            </VBox>
+
+            <!-- RIGHT PANEL — TabPanel -->
+            <TabPane fx:id="mainTabs"
+                     styleClass="main-tabs"
+                     tabMinWidth="150">
+
+                <!-- Tab 1: Add Book -->
+                <Tab text="➕  Add Book" closable="false">
+
+                    <ScrollPane fx:id="formScroll"
+                                fitToWidth="true"
+                                hbarPolicy="NEVER"
+                                styleClass="form-scroll">
+
+                        <VBox styleClass="form-panel" spacing="9.0">
+                            <padding>
+                                <Insets top="16" right="16" bottom="16" left="16"/>
+                            </padding>
+
+                            <Label text="New Book" styleClass="section-label"/>
+
+                            <!-- Type -->
+                            <HBox styleClass="form-row">
+                                <Label text="Type:" styleClass="form-label" minWidth="100"/>
+                                <ComboBox fx:id="cbType"
+                                          styleClass="combo-field"
+                                          maxWidth="Infinity"
+                                          onAction="#handleTypeChange"
+                                          HBox.hgrow="ALWAYS"/>
+                            </HBox>
+
+                            <!-- Title -->
+                            <HBox styleClass="form-row">
+                                <Label text="Title:" styleClass="form-label" minWidth="100"/>
+                                <TextField fx:id="tfTitle"
+                                           promptText="required"
+                                           styleClass="text-field-dark"
+                                           maxWidth="Infinity"
+                                           HBox.hgrow="ALWAYS"/>
+                            </HBox>
+
+                            <!-- Author -->
+                            <HBox styleClass="form-row">
+                                <Label text="Author:" styleClass="form-label" minWidth="100"/>
+                                <TextField fx:id="tfAuthor"
+                                           promptText="required"
+                                           styleClass="text-field-dark"
+                                           maxWidth="Infinity"
+                                           HBox.hgrow="ALWAYS"/>
+                            </HBox>
+
+                            <!-- Year -->
+                            <HBox styleClass="form-row">
+                                <Label text="Year:" styleClass="form-label" minWidth="100"/>
+                                <TextField fx:id="tfYear"
+                                           promptText="e.g. 2023"
+                                           styleClass="text-field-dark"
+                                           maxWidth="Infinity"
+                                           HBox.hgrow="ALWAYS"/>
+                            </HBox>
+
+                            <!-- Price -->
+                            <HBox styleClass="form-row">
+                                <Label text="Price:" styleClass="form-label" minWidth="100"/>
+                                <TextField fx:id="tfPrice"
+                                           promptText="e.g. 19.99"
+                                           styleClass="text-field-dark"
+                                           maxWidth="Infinity"
+                                           HBox.hgrow="ALWAYS"/>
+                            </HBox>
+
+                            <!-- Genre -->
+                            <HBox styleClass="form-row">
+                                <Label text="Genre:" styleClass="form-label" minWidth="100"/>
+                                <ComboBox fx:id="cbGenre"
+                                          styleClass="combo-field"
+                                          maxWidth="Infinity"
+                                          HBox.hgrow="ALWAYS"/>
+                            </HBox>
+
+                            <!-- Pages -->
+                            <HBox styleClass="form-row">
+                                <Label text="Pages:" styleClass="form-label" minWidth="100"/>
+                                <TextField fx:id="tfPages"
+                                           promptText="e.g. 300"
+                                           styleClass="text-field-dark"
+                                           maxWidth="Infinity"
+                                           HBox.hgrow="ALWAYS"/>
+                            </HBox>
+
+                            <Separator styleClass="form-sep"/>
+
+                            <!--
+                                Dynamic type-specific fields.
+                                Populated programmatically in
+                                MainController#rebuildSpecificFields().
+                            -->
+                            <VBox fx:id="specificFieldsBox" spacing="9.0"/>
+
+                            <Separator styleClass="form-sep"/>
+
+                            <!-- Quantity -->
+                            <HBox styleClass="form-row">
+                                <Label text="Quantity:" styleClass="form-label" minWidth="100"/>
+                                <TextField fx:id="tfQuantity"
+                                           promptText="e.g. 1"
+                                           styleClass="text-field-dark"
+                                           maxWidth="Infinity"
+                                           HBox.hgrow="ALWAYS"/>
+                            </HBox>
+
+                            <Button text="Add Book"
+                                    styleClass="btn-accent-green"
+                                    maxWidth="Infinity"
+                                    onAction="#handleAddBook"/>
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+
+                <!-- Tab 2: Search by UUID -->
+                <Tab text="🔍  Search by UUID" closable="false">
+
+                    <VBox styleClass="search-panel" spacing="12.0">
+
+                        <Label text="Search by UUID" styleClass="section-label"/>
+
+                        <!-- UUID input row -->
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <TextField fx:id="tfUuidSearch"
+                                       promptText="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                                       styleClass="text-field-mono"
+                                       maxWidth="Infinity"
+                                       onAction="#handleUuidSearch"
+                                       HBox.hgrow="ALWAYS">
+                                <font>
+                                    <Font name="Consolas" size="12"/>
+                                </font>
+                            </TextField>
+                            <Button text="Find"
+                                    styleClass="btn-accent-blue"
+                                    minWidth="70"
+                                    onAction="#handleUuidSearch"/>
+                        </HBox>
+
+                        <!-- Result area -->
+                        <TextArea fx:id="taSearchResult"
+                                  editable="false"
+                                  wrapText="true"
+                                  promptText="Result will appear here…"
+                                  styleClass="result-area"
+                                  VBox.vgrow="ALWAYS"/>
+
+                        <Label text="💡 Click any book in the list to auto-fill the UUID field."
+                               styleClass="hint-label"/>
+                    </VBox>
+                </Tab>
+
+            </TabPane>
+        </SplitPane>
+    </center>
+
+    <!-- BOTTOM — status bar -->
+    <bottom>
+        <HBox styleClass="status-bar" alignment="CENTER_LEFT">
+            <Label fx:id="statusLabel"
+                   text="Ready."
+                   styleClass="status-ok"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

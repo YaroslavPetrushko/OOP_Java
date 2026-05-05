@@ -1,6 +1,7 @@
 package ua.edu.sumdu.model;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 /**
  * Бібліотека — клас-контейнер для зберігання книг з урахуванням кількості примірників.
@@ -218,6 +219,53 @@ public class Library {
     // ---------------------------------------------------------------
     // Методи пошуку (не змінюють колекцію)
     // ---------------------------------------------------------------
+
+    /**
+     * Знаходить запис за коротким UUID.
+     *
+     * <p>Приймає рядок що містить частину UUID. Якщо рядок пустий —
+     * повертає {@code null} замість виключення.</p>
+     *
+     * @param uuidString рядкове представлення UUID
+     * @return знайдений {@link BookEntry} або {@code null}
+     */
+    public BookEntry findByShortUuid(String uuidString) {
+        if (uuidString == null || uuidString.isBlank()) return null;
+
+        for (int i = 0; i < entries.size(); i++) {
+            BookEntry entry = entries.get(i);
+            if (entry.getBook().getUuid().toString().contains(uuidString)) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Знаходить запис за UUID.
+     *
+     * <p>Приймає рядок та конвертує у UUID. Якщо формат UUID некоректний —
+     * повертає {@code null} замість виключення.</p>
+     *
+     * @param uuidString рядкове представлення UUID
+     * @return знайдений {@link BookEntry} або {@code null}
+     */
+    public BookEntry findByFullUuid(String uuidString) {
+        if (uuidString == null || uuidString.isBlank()) return null;
+        UUID target;
+        try {
+            target = UUID.fromString(uuidString.trim());
+        } catch (IllegalArgumentException e) {
+            return null; // некоректний формат UUID
+        }
+        for (int i = 0; i < entries.size(); i++) {
+            BookEntry entry = entries.get(i);
+            if (entry.getBook().getUuid().equals(target)) {
+                return entry;
+            }
+        }
+        return null;
+    }
 
     /**
      * Знаходить усі записи, автор книги яких містить {@code author}
