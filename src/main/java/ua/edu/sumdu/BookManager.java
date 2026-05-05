@@ -405,6 +405,10 @@ public class BookManager {
     // Пункт 3: Модифікація книги
     // ---------------------------------------------------------------
 
+    /**
+     * Показує список книг, дає вибрати одну, потім — атрибут для зміни.
+     * Після введення нового значення викликає {@link Library#update}.
+     */
     private void modifyBook() {
         System.out.println("\n--- Modify book ---");
         if (library.getEntryCount() == 0) {
@@ -538,6 +542,10 @@ public class BookManager {
     // Пункт 4: Видалення книги
     // ---------------------------------------------------------------
 
+    /**
+     * Показує список книг, дозволяє вибрати одну за номером,
+     * запитує підтвердження та викликає {@link Library#delete}.
+     */
     private void deleteBook() {
         System.out.println("\n--- Delete book ---");
         if (library.getEntryCount() == 0) {
