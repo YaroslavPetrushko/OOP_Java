@@ -193,6 +193,18 @@ public class Library {
         return false;
     }
 
+    // Видалення запису
+    public boolean delete(BookEntry existingObject) {
+        if (existingObject == null) return false;
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).equals(existingObject)) {
+                entries.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ---------------------------------------------------------------
     // Методи пошуку (не змінюють колекцію)
     // ---------------------------------------------------------------
