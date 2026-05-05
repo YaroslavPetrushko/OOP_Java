@@ -181,6 +181,18 @@ public class Library {
         // entries.addAll(newOrder);
     }
 
+    // Оновлення запису
+    public boolean update(BookEntry existingObject, BookEntry newObject) {
+        if (existingObject == null || newObject == null) return false;
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).equals(existingObject)) {
+                entries.set(i, newObject);
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ---------------------------------------------------------------
     // Методи пошуку (не змінюють колекцію)
     // ---------------------------------------------------------------
