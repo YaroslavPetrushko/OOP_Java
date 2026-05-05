@@ -210,16 +210,18 @@ public class BookManager {
             System.out.println("  1. By author");
             System.out.println("  2. By genre");
             System.out.println("  3. By price range");
+            System.out.println("  4. By UUID");
             System.out.println("  0. Back to main menu");
             System.out.print("Criterion: ");
 
             int choice = readMenuChoice();
             System.out.println();
 
-            switch (choice) {
+        switch (choice) {
                 case 1 -> searchByAuthor();
                 case 2 -> searchByGenre();
                 case 3 -> searchByPriceRange();
+                case 4 -> searchByUuid();
                 case 0 -> System.out.println("  Cancelled.\n");
                 default -> System.out.println("  [!] Unknown criterion.\n");
             }
@@ -265,6 +267,28 @@ public class BookManager {
         }
     }
 
+    // Пошук книги за UUID
+    private void searchByUuid() {
+        String uuidString = readNonEmptyString("Enter UUID (full or partial): ").trim();
+        BookEntry result;
+
+        try {
+            // Намагаємось перевірити, чи це валідний повний UUID
+            UUID.fromString(uuidString);
+            // Якщо помилки немає, значить формат повний
+            result = library.findByFullUuid(uuidString);
+        } catch (IllegalArgumentException e) {
+            // Якщо зловили помилку, значить користувач ввів короткий UUID
+            result = library.findByShortUuid(uuidString);
+        }
+
+        try {
+            printSearchByIdResult(result, "UUID = " + uuidString);
+        } catch (ObjectNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     /**
      * Виводить результати пошуку або повідомлення про відсутність збігів.
      * Показує книгу та кількість примірників.
@@ -287,8 +311,7 @@ public class BookManager {
     private void printSearchByIdResult(BookEntry result, String criterion) {
         System.out.println("--- Search results [" + criterion + "] ---");
         if (result==null) {
-            System.out.println("  No book found with this UUID.\n");
-            return;
+            throw new ObjectNotFoundException("No book found with this UUID.\n");
         }
         System.out.println("  " + result.getBook().toString());
         System.out.println("  Copies in library: " + result.getQuantity());
@@ -782,6 +805,7 @@ public class BookManager {
 
         if (!answer.equals("y") && !answer.equals("yes")){
             System.out.println("  Cancelled.\n");
+            return;
         }
 
         try {
