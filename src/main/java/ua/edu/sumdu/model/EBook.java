@@ -137,20 +137,17 @@ public class EBook extends Book {
     // ---------------------------------------------------------------
 
     /**
-     * Повертає рядкове представлення електронної книги.
+     * Повертає рядкове представлення електронної книги зі скороченим UUID.
      *
-     * <p>Перевизначає {@link Book#toString()} — при виклику через посилання
-     * базового типу {@code Book} буде виконано саме цей метод (поліморфізм).</p>
-     *
-     * @return форматований рядок з усіма полями
+     * @return форматований рядок
      */
     @Override
     public String toString() {
         return String.format(
-                "[EBook] \"%s\" by %s | %d | $%.2f | %s | %d pages" +
-                        " | %s | %.1f MB | %s",
+                "[EBook] \"%s\" by %s | %d | $%.2f | %s | %d pages"
+                        + " | %s | %.1f MB | %s%s",
                 getTitle(), getAuthor(), getYear(), getPrice(), getGenre(), getPages(),
-                fileFormat, fileSizeMB, downloadUrl);
+                fileFormat, fileSizeMB, downloadUrl, uuidSuffix());
     }
 
     /**
