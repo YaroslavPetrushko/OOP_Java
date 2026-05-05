@@ -101,9 +101,10 @@ public class BookManager {
                 case 1 -> searchMenu();
                 case 2 -> createObject();
                 case 3 -> modifyBook();
-                case 4 -> printAllBooks();
-                case 5 -> sortBooks();
-                case 6 -> {
+                case 4 -> deleteBook();
+                case 5 -> printAllBooks();
+                case 6 -> sortBooks();
+                case 7 -> {
                     saveBooks();
                     System.out.println("Goodbye!");
                     running = false;
@@ -167,9 +168,10 @@ public class BookManager {
         System.out.println("1. Search book");
         System.out.println("2. Create new book");
         System.out.println("3. Modify book");
-        System.out.println("4. Show all books");
-        System.out.println("5. Sort books");
-        System.out.println("6. Exit");
+        System.out.println("4. Delete book");
+        System.out.println("5. Show all books");
+        System.out.println("6. Sort books");
+        System.out.println("7. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -533,7 +535,43 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 4: Виведення всіх книг
+    // Пункт 4: Видалення книги
+    // ---------------------------------------------------------------
+
+    private void deleteBook() {
+        System.out.println("\n--- Delete book ---");
+        if (library.getEntryCount() == 0) {
+            System.out.println("  (library is empty)\n");
+            return;
+        }
+        printAllBooks();
+
+        int idx = readInt("Select book number to delete: ") - 1;
+        if (idx < 0 || idx >= library.getEntryCount()) {
+            System.out.println("  [!] Invalid number.\n");
+            return;
+        }
+
+        BookEntry entry = library.getEntry(idx);
+        System.out.println("  Selected: \"" + entry.getBook().getTitle()+"\" by "+ entry.getBook().getAuthor());
+        System.out.print("  Confirm deletion (y/n): ");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+
+        if (!confirm.equals("y") && !confirm.equals("yes")) {
+            System.out.println("  Cancelled.\n");
+            return;
+        }
+
+        boolean result = library.delete(entry);
+        if (result) {
+            System.out.println("  [OK] Book deleted. Library size: " + library.getEntryCount() + "\n");
+        } else {
+            System.out.println("  [!] Book not found in library.\n");
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 5: Виведення всіх книг
     // ---------------------------------------------------------------
 
     /**
@@ -559,7 +597,7 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 5: Меню сортування та виведення відсортованих книг
+    // Пункт 6: Меню сортування та виведення відсортованих книг
     // ---------------------------------------------------------------
 
     /**
