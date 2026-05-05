@@ -129,7 +129,7 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v11.0           ║");
+        System.out.println("║            BOOK MANAGER  v11.1           ║");
         System.out.println("║Library | Modify+Delete | TXT+JSON storage║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
@@ -229,7 +229,12 @@ public class BookManager {
     private void searchByAuthor() {
         String author = readNonEmptyString("Author name: ");
         ArrayList<BookEntry> result = library.findByAuthor(author);
-        printSearchResult(result, "author contains \"" + author + "\"");
+
+        try {
+            printSearchResult(result, "author contains \"" + author + "\"");
+        } catch (ObjectNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     // Пошук за жанром
@@ -237,7 +242,12 @@ public class BookManager {
         Genre genre = readEnum(Genre.values(), "Genre");
         System.out.println();
         ArrayList<BookEntry> result = library.findByGenre(genre);
-        printSearchResult(result, "genre = " + genre);
+
+        try{
+            printSearchResult(result, "genre = " + genre);
+        } catch (ObjectNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     // Пошук за діапазоном ціни
@@ -245,9 +255,14 @@ public class BookManager {
         double minPrice = readDouble("Min price ($): ");
         double maxPrice = readDouble("Max price ($): ");
         ArrayList<BookEntry> result = library.findByPriceRange(minPrice, maxPrice);
-        printSearchResult(result,
+
+        try{
+            printSearchResult(result,
                 "price in [$" + String.format("%.2f", minPrice)
                         + " .. $" + String.format("%.2f", maxPrice) + "]");
+        } catch (ObjectNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
@@ -260,8 +275,7 @@ public class BookManager {
     private void printSearchResult(ArrayList<BookEntry> result, String criterion) {
         System.out.println("--- Search results [" + criterion + "] ---");
         if (result.isEmpty()) {
-            System.out.println("  No objects found matching the given criterion.\n");
-            return;
+            throw new ObjectNotFoundException("No objects found matching the given criterion.\n");
         }
         System.out.println("  Found " + result.size() + " record(s):");
         for (int i = 0; i < result.size(); i++) {
@@ -333,14 +347,14 @@ public class BookManager {
             String fileFormat   = readNonEmptyString("File format (EPUB/PDF/MOBI): ");
             double fileSizeMB   = readDouble("File size (MB):  ");
             String downloadUrl  = readNonEmptyString("Download URL: ");
-            int    quantity    = readInt("Quantity:  ");
+            int    quantity     = readInt("Quantity:  ");
 
             library.addNewBook(new EBook(title, author, year, price, genre, pages,
                     fileFormat, fileSizeMB, downloadUrl), quantity);
             System.out.println("  [OK] EBook added. Library size: " + library.getEntryCount() + "\n");
 
         } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
+            System.out.println(" [!] " + e.getMessage() + "\n");
         }
     }
 
@@ -359,13 +373,13 @@ public class BookManager {
             String narrator         = readNonEmptyString("Narrator:     ");
             int    durationMinutes  = readInt("Duration (minutes):  ");
             String audioFormat      = readNonEmptyString("Audio format (MP3/AAC/FLAC): ");
-            int    quantity        = readInt("Quantity:  ");
+            int    quantity         = readInt("Quantity:  ");
 
             library.addNewBook(new AudioBook(title, author, year, price, genre, pages,
                     narrator, durationMinutes, audioFormat), quantity);
             System.out.println("  [OK] AudioBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
+            System.out.println(" [!] " + e.getMessage() + "\n");
         }
     }
 
@@ -390,7 +404,7 @@ public class BookManager {
                     publisher, edition, weightGrams), quantity);
             System.out.println("  [OK] PaperBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
+            System.out.println(" [!] " + e.getMessage() + "\n");
         }
     }
 
@@ -419,7 +433,7 @@ public class BookManager {
                     condition, estimatedValueUSD, acquisitionYear), quantity);
             System.out.println("  [OK] RareBook added. Library size: " + library.getEntryCount() + "\n");
         } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
+            System.out.println(" [!] " + e.getMessage() + "\n");
         }
     }
 
@@ -441,7 +455,7 @@ public class BookManager {
 
         int idx = readInt("Select book number: ") - 1;
         if (idx < 0 || idx >= library.getEntryCount()) {
-            System.out.println("  [!] Invalid number.\n");
+            System.out.println(" [!] Invalid number.\n");
             return;
         }
 
@@ -492,14 +506,10 @@ public class BookManager {
                 System.out.println("  [!] Unknown attribute for this book type.\n");
                 return;
             }
-            boolean result = library.update(entry, entry);
-            if (result) {
-                System.out.println("  [OK] Book updated.\n");
-            } else {
-                System.out.println("  [!] Book not found in library.\n");
-            }
-        } catch (InvalidBookDataException e) {
-            System.out.println("  [!] " + e.getMessage() + "\n");
+            library.update(entry, entry);
+            System.out.println("  [OK] Book updated.\n");
+        } catch (DuplicateObjectException | ObjectNotFoundException | InvalidBookDataException e) {
+            System.out.println(" [!] " + e.getMessage() + "\n");
         }
     }
 
@@ -592,11 +602,11 @@ public class BookManager {
             return;
         }
 
-        boolean result = library.delete(entry);
-        if (result) {
+        try {
+            library.delete(entry);
             System.out.println("  [OK] Book deleted. Library size: " + library.getEntryCount() + "\n");
-        } else {
-            System.out.println("  [!] Book not found in library.\n");
+        } catch (ObjectNotFoundException e) {
+            System.out.println(" [!] " + e.getMessage() + "\n");
         }
     }
 
@@ -770,13 +780,16 @@ public class BookManager {
         System.out.print("Save this order as the new library order? (y/n): ");
         String answer = scanner.nextLine().trim().toLowerCase();
 
-        if (answer.equals("y")||answer.equals("yes")) {
-            library.reorderEntries(sortedBooks);
-            System.out.println("  [OK] New order saved.\n");
-        } else {
-            System.out.println("  Order not saved.\n");
+        if (!answer.equals("y") && !answer.equals("yes")){
+            System.out.println("  Cancelled.\n");
         }
 
+        try {
+            library.reorderEntries(sortedBooks);
+            System.out.println("  [OK] New order saved.\n");
+        } catch (DuplicateObjectException| InvalidBookDataException | ObjectNotFoundException e) {
+            System.out.println(" [!] Order not saved.\n");
+        }
     }
 
     // ---------------------------------------------------------------

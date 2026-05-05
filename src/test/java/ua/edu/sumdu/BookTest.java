@@ -10,6 +10,8 @@ import ua.edu.sumdu.model.BookEntry;
 import ua.edu.sumdu.model.EBook;
 import ua.edu.sumdu.model.Genre;
 import ua.edu.sumdu.model.InvalidBookDataException;
+import ua.edu.sumdu.model.ObjectNotFoundException;
+import ua.edu.sumdu.model.DuplicateObjectException;
 import ua.edu.sumdu.model.Library;
 import ua.edu.sumdu.model.PaperBook;
 import ua.edu.sumdu.model.RareBook;
@@ -777,55 +779,56 @@ class BookTest {
     }
 
     // ---------------------------------------------------------------
-    // update
+    // ObjectNotFoundException / DuplicateObjectException
     // ---------------------------------------------------------------
 
     @Test
-    void update_existingEntry_returnsTrue() {
-        BookEntry entry = library.getEntry(0);
-        assertTrue(library.update(entry, entry));
+    void delete_nonExistingBook_throwsObjectNotFoundException() {
+        BookEntry notInLibrary = new BookEntry(
+                new EBook("Ghost Book", "Ghost Author", 2020, 9.99,
+                        Genre.FICTION, 100, "PDF", 1.0, "https://x.com"),
+                1);
+
+        assertThrows(ObjectNotFoundException.class, () -> library.delete(notInLibrary));
     }
 
     @Test
-    void update_nonExistingEntry_returnsFalse() {
-        BookEntry stranger = new BookEntry(
-                new EBook("Unknown", "Nobody", 2020, 1.0, Genre.FICTION, 100,
-                        "PDF", 1.0, "https://x.com"), 1);
-        assertFalse(library.update(stranger, stranger));
+    void update_nonExistingBook_throwsObjectNotFoundException() {
+        BookEntry notInLibrary = new BookEntry(
+                new EBook("Ghost Book", "Ghost Author", 2020, 9.99,
+                        Genre.FICTION, 100, "PDF", 1.0, "https://x.com"),
+                1);
+
+        assertThrows(ObjectNotFoundException.class,
+                () -> library.update(notInLibrary, notInLibrary));
     }
 
     @Test
-    void update_nullArgs_returnsFalse() {
-        assertFalse(library.update(null, null));
-        assertFalse(library.update(library.getEntry(0), null));
-        assertFalse(library.update(null, library.getEntry(0)));
-    }
+    void update_withDuplicateBook_throwsDuplicateObjectException() {
+        Library lib = new Library("Dup Test", "Nowhere");
 
-    @Test
-    void update_emptyLibrary_returnsFalse() {
-        Library empty = new Library("Empty", "Nowhere");
-        BookEntry entry = new BookEntry(cleanCode, 1);
-        assertFalse(empty.update(entry, entry));
-    }
+        EBook book1 = new EBook("Unique Title", "Some Author",
+                2020, 10.0, Genre.FICTION, 100, "PDF", 1.0, "https://a.com");
+        EBook book2 = new EBook("Other Title", "Other Author",
+                2021, 20.0, Genre.SCIENCE, 200, "EPUB", 2.0, "https://b.com");
 
-    @Test
-    void update_changesTitle_persistsInLibrary() {
-        BookEntry entry = library.getEntry(0);
-        String oldTitle = entry.getBook().getTitle();
+        lib.addNewBook(book1, 1);
+        lib.addNewBook(book2, 1);
 
-        entry.getBook().setTitle("Modified Title");
-        library.update(entry, entry);
+        // Змінюємо book2 щоб він став ідентичним book1 (за Book.equals + EBook.equals)
+        BookEntry entry2 = lib.getEntry(1);
+        EBook modBook = (EBook) entry2.getBook();
+        modBook.setTitle("Unique Title");
+        modBook.setAuthor("Some Author");
+        modBook.setYear(2020);
+        modBook.setPrice(10.0);
+        modBook.setGenre(Genre.FICTION);
+        modBook.setPages(100);
+        modBook.setFileFormat("PDF");
+        modBook.setFileSizeMB(1.0);
+        modBook.setDownloadUrl("https://a.com");
 
-        assertEquals("Modified Title", library.getEntry(0).getBook().getTitle());
-        assertNotEquals(oldTitle, library.getEntry(0).getBook().getTitle());
-    }
-
-    @Test
-    void update_doesNotChangeCount() {
-        int before = library.getEntryCount();
-        BookEntry entry = library.getEntry(0);
-        library.update(entry, entry);
-        assertEquals(before, library.getEntryCount());
+        assertThrows(DuplicateObjectException.class, () -> lib.update(entry2, entry2));
     }
 
 }
