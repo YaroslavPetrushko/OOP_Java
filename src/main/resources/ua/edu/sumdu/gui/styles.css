@@ -1,0 +1,439 @@
+/* ==========================================================================
+   Book Manager — Dark UI  (Catppuccin Mocha palette)
+   src/main/resources/ua/edu/sumdu/gui/styles.css
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Root / global
+   -------------------------------------------------------------------------- */
+.root {
+    -fx-background-color: #1e1e2e;
+    -fx-font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   Header bar
+   -------------------------------------------------------------------------- */
+.header {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 13 20 13 20;
+    -fx-spacing: 14;
+}
+
+.header-title {
+    -fx-text-fill: #cdd6f4;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+   Status bar
+   -------------------------------------------------------------------------- */
+.status-bar {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 6 16 6 16;
+}
+
+.status-ok {
+    -fx-text-fill: #a6e3a1;
+    -fx-font-size: 12px;
+}
+
+.status-error {
+    -fx-text-fill: #f38ba8;
+    -fx-font-size: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   SplitPane
+   -------------------------------------------------------------------------- */
+.main-split {
+    -fx-background-color: #1e1e2e;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.main-split > .split-pane-divider {
+    -fx-background-color: #313244;
+    -fx-padding: 0 1 0 1;
+}
+
+/* --------------------------------------------------------------------------
+   Left panel
+   -------------------------------------------------------------------------- */
+.left-panel {
+    -fx-background-color: #1e1e2e;
+    -fx-padding: 16;
+    -fx-spacing: 10;
+}
+
+/* --------------------------------------------------------------------------
+   ListView — book list
+   -------------------------------------------------------------------------- */
+.book-list {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+/* Remove the ListView's own inner white frame */
+.book-list .list-view,
+.book-list > .virtual-flow,
+.book-list > .virtual-flow > .clipped-container {
+    -fx-background-color: transparent;
+}
+
+/* Cells */
+.book-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cdd6f4;
+    -fx-font-size: 12px;
+    -fx-padding: 6 10 6 10;
+}
+
+.book-list .list-cell:filled:hover {
+    -fx-background-color: #313244;
+    -fx-cursor: hand;
+}
+
+.book-list .list-cell:filled:selected,
+.book-list .list-cell:filled:selected:hover {
+    -fx-background-color: #45475a;
+    -fx-text-fill: #cdd6f4;
+}
+
+/* ── Hide horizontal scrollbar completely ── */
+.book-list > .virtual-flow > .scroll-bar:horizontal,
+.book-list > .virtual-flow > .scroll-bar:horizontal .track,
+.book-list > .virtual-flow > .scroll-bar:horizontal .thumb,
+.book-list > .virtual-flow > .scroll-bar:horizontal .increment-button,
+.book-list > .virtual-flow > .scroll-bar:horizontal .decrement-button {
+    -fx-max-height: 0;
+    -fx-min-height: 0;
+    -fx-pref-height: 0;
+    -fx-opacity: 0;
+    -fx-padding: 0;
+}
+
+/* Corner cell (bottom-right between both scrollbars) */
+.book-list > .virtual-flow > .corner {
+    -fx-background-color: transparent;
+}
+
+/* Vertical scrollbar styling */
+.book-list > .virtual-flow > .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8;
+}
+
+.book-list > .virtual-flow > .scroll-bar:vertical .track {
+    -fx-background-color: #313244;
+    -fx-background-radius: 4;
+}
+
+.book-list > .virtual-flow > .scroll-bar:vertical .thumb {
+    -fx-background-color: #45475a;
+    -fx-background-radius: 4;
+}
+
+.book-list > .virtual-flow > .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #585b70;
+}
+
+.book-list > .virtual-flow > .scroll-bar:vertical .increment-button,
+.book-list > .virtual-flow > .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.book-list > .virtual-flow > .scroll-bar:vertical .increment-arrow,
+.book-list > .virtual-flow > .scroll-bar:vertical .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+
+/* --------------------------------------------------------------------------
+   TabPane — remove ALL default white borders/backgrounds
+   -------------------------------------------------------------------------- */
+.main-tabs {
+    -fx-background-color: #1e1e2e;
+    -fx-tab-min-width: 150;
+}
+
+/* The entire header strip */
+.main-tabs > .tab-header-area {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0;
+}
+
+/* Background behind the tab buttons */
+.main-tabs > .tab-header-area > .tab-header-background {
+    -fx-background-color: #181825;
+    -fx-border-color: transparent;
+}
+
+/* Individual tab button */
+.main-tabs > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: #181825;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.main-tabs > .tab-header-area > .headers-region > .tab:hover {
+    -fx-background-color: #313244;
+}
+
+.main-tabs > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #1e1e2e;
+    -fx-border-color: #89b4fa;
+    -fx-border-width: 0 0 2 0;
+}
+
+.main-tabs > .tab-header-area > .headers-region > .tab .tab-label {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 13px;
+}
+
+.main-tabs > .tab-header-area > .headers-region > .tab:selected .tab-label {
+    -fx-text-fill: #cdd6f4;
+    -fx-font-weight: bold;
+}
+
+/* Content area — remove white frame */
+.main-tabs > .tab-content-area {
+    -fx-background-color: #1e1e2e;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+/* Focus ring suppression */
+.main-tabs:focused > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: #1e1e2e;
+}
+
+/* --------------------------------------------------------------------------
+   Form — Add Book panel
+   -------------------------------------------------------------------------- */
+.form-panel {
+    -fx-background-color: #1e1e2e;
+}
+
+/* ScrollPane around the form */
+.form-scroll {
+    -fx-background-color: #1e1e2e;
+    -fx-background: #1e1e2e;
+    -fx-border-color: transparent;
+}
+
+.form-scroll > .viewport {
+    -fx-background-color: #1e1e2e;
+}
+
+.form-scroll > .scroll-bar:vertical .track      { -fx-background-color: #313244; -fx-background-radius: 4; }
+.form-scroll > .scroll-bar:vertical .thumb      { -fx-background-color: #45475a; -fx-background-radius: 4; }
+.form-scroll > .scroll-bar:vertical             { -fx-background-color: transparent; -fx-pref-width: 8; }
+.form-scroll > .scroll-bar:vertical .increment-button,
+.form-scroll > .scroll-bar:vertical .decrement-button { -fx-background-color: transparent; -fx-padding: 0; }
+.form-scroll > .scroll-bar:vertical .increment-arrow,
+.form-scroll > .scroll-bar:vertical .decrement-arrow  { -fx-shape: ""; -fx-padding: 0; }
+
+.form-row {
+    -fx-spacing: 8;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.form-label {
+    -fx-text-fill: #bac2de;
+    -fx-font-size: 12px;
+    -fx-min-width: 100;
+}
+
+.form-sep {
+    -fx-background-color: #313244;
+}
+
+/* --------------------------------------------------------------------------
+   Section label (heading inside panels)
+   -------------------------------------------------------------------------- */
+.section-label {
+    -fx-text-fill: #89dceb;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* --------------------------------------------------------------------------
+   TextField variants
+   -------------------------------------------------------------------------- */
+.text-field-dark {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-prompt-text-fill: #6c7086;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 6 10;
+    -fx-highlight-fill: #89b4fa;
+    -fx-highlight-text-fill: #1e1e2e;
+}
+
+.text-field-dark:focused {
+    -fx-border-color: #89b4fa;
+}
+
+/* Monospace UUID search field */
+.text-field-mono {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-prompt-text-fill: #6c7086;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 6 10;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 12px;
+    -fx-highlight-fill: #89b4fa;
+}
+
+.text-field-mono:focused {
+    -fx-border-color: #89b4fa;
+}
+
+/* --------------------------------------------------------------------------
+   ComboBox
+   -------------------------------------------------------------------------- */
+.combo-field {
+    -fx-background-color: #313244;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 2 0;
+}
+
+.combo-field .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cdd6f4;
+    -fx-padding: 4 10;
+}
+
+.combo-field:focused {
+    -fx-border-color: #89b4fa;
+}
+
+.combo-field .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-field .arrow {
+    -fx-background-color: #6c7086;
+}
+
+.combo-field .combo-box-popup > .list-view {
+    -fx-background-color: #313244;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 8, 0, 0, 2);
+}
+
+.combo-field .combo-box-popup > .list-view .list-cell {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-padding: 6 12;
+}
+
+.combo-field .combo-box-popup > .list-view .list-cell:hover {
+    -fx-background-color: #45475a;
+}
+
+.combo-field .combo-box-popup > .list-view .list-cell:selected {
+    -fx-background-color: #585b70;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+.btn-accent-blue {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 7 16;
+    -fx-cursor: hand;
+}
+
+.btn-accent-blue:hover   { -fx-background-color: #b4befe; }
+.btn-accent-blue:pressed { -fx-background-color: #74c7ec; }
+
+.btn-accent-green {
+    -fx-background-color: #a6e3a1;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-padding: 7 16;
+    -fx-cursor: hand;
+}
+
+.btn-accent-green:hover   { -fx-background-color: #b9f0b4; }
+.btn-accent-green:pressed { -fx-background-color: #94e2d5; }
+
+/* --------------------------------------------------------------------------
+   Search panel
+   -------------------------------------------------------------------------- */
+.search-panel {
+    -fx-background-color: #1e1e2e;
+    -fx-padding: 16;
+    -fx-spacing: 12;
+}
+
+/* TextArea result output */
+.result-area {
+    -fx-control-inner-background: #181825;
+    -fx-text-fill: #cdd6f4;
+    -fx-font-family: "Consolas", "Courier New", monospace;
+    -fx-font-size: 13px;
+    -fx-border-color: #313244;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-highlight-fill: #89b4fa;
+}
+
+.result-area .content {
+    -fx-background-color: #181825;
+}
+
+.result-area > .scroll-pane > .scroll-bar:vertical .track  { -fx-background-color: #313244; -fx-background-radius: 4; }
+.result-area > .scroll-pane > .scroll-bar:vertical .thumb  { -fx-background-color: #45475a; -fx-background-radius: 4; }
+.result-area > .scroll-pane > .scroll-bar:vertical         { -fx-background-color: transparent; -fx-pref-width: 8; }
+.result-area > .scroll-pane > .scroll-bar:vertical .increment-button,
+.result-area > .scroll-pane > .scroll-bar:vertical .decrement-button { -fx-background-color: transparent; -fx-padding: 0; }
+.result-area > .scroll-pane > .scroll-bar:vertical .increment-arrow,
+.result-area > .scroll-pane > .scroll-bar:vertical .decrement-arrow  { -fx-shape: ""; -fx-padding: 0; }
+
+/* --------------------------------------------------------------------------
+   Hint text
+   -------------------------------------------------------------------------- */
+.hint-label {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 11px;
+}
+
+/* --------------------------------------------------------------------------
+   Separator
+   -------------------------------------------------------------------------- */
+.separator *.line {
+    -fx-background-color: #313244;
+    -fx-border-color: #313244;
+}
