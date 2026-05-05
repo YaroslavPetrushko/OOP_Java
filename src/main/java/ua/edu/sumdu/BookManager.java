@@ -5,10 +5,7 @@ import ua.edu.sumdu.storage.BookStorage;
 import ua.edu.sumdu.storage.TxtBookStorage;
 import ua.edu.sumdu.storage.JsonBookStorage;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Контролер програми «Book Manager».
@@ -253,11 +250,21 @@ public class BookManager {
     }
 
     // Пошук книги за UUID
-    // Приймає скорочену версію ID та шукає за збігом
     private void searchByUuid() {
-        String uuidString = readNonEmptyString("Enter UUID: ");
-        BookEntry result = library.findByUuid(uuidString);
-        printSearchByIdResult(result, "UUID = " + uuidString + "");
+        String uuidString = readNonEmptyString("Enter UUID (full or partial): ").trim();
+        BookEntry result;
+
+        try {
+            // Намагаємось перевірити, чи це валідний повний UUID
+            UUID.fromString(uuidString);
+            // Якщо помилки немає, значить формат повний
+            result = library.findByFullUuid(uuidString);
+        } catch (IllegalArgumentException e) {
+            // Якщо зловили помилку, значить користувач ввів короткий UUID
+            result = library.findByShortUuid(uuidString);
+        }
+
+        printSearchByIdResult(result, "UUID = " + uuidString);
     }
 
     /**

@@ -264,36 +264,47 @@ public class MainController {
     @FXML
     private void handleUuidSearch() {
         String input = tfUuidSearch.getText().trim();
+        BookEntry entry = null;
+        boolean isFullMatch = false;
 
         if (input.isEmpty()) {
             taSearchResult.setText("⚠  Please enter a UUID.");
             setStatus("UUID field is empty.", true);
             return;
         }
+        // Захист від занадто коротких запитів для часткового пошуку
+        if (input.length() < 4) {
+            taSearchResult.setText("✗  Search query is too short.\n\n"
+                    + "Please enter a full UUID or at least 4 characters of it.");
+            setStatus("✗ Invalid input length.", true);
+            return;
+        }
 
         // Перевірка формату
         try {
             UUID.fromString(input);
-        } catch (IllegalArgumentException ex) {
-            taSearchResult.setText(
-                    "✗  Invalid UUID format.\n\n"
-                            + "Expected:\n  xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\n\n"
-                            + "Got:\n  " + input);
-            setStatus("✗ Invalid UUID format.", true);
-            return;
+            entry = library.findByFullUuid(input);
+            isFullMatch = true;
+        } catch (IllegalArgumentException e) {
+            // Якщо зловили помилку, значить користувач ввів короткий UUID
+            entry = library.findByShortUuid(input);
         }
 
-        BookEntry entry = library.findByUuid(input);
 
-        if (entry == null) {
+        if (entry != null) {
+            // Знайшли книгу
+            taSearchResult.setText(buildFullInfo(entry.getBook(), entry.getQuantity()));
+            setStatus("✓ Found: " + entry.getBook().getShortInfo(), false);
+
+            String matchType = isFullMatch ? "Full UUID match" : "Partial UUID match";
+            setStatus("✓ Success (" + matchType + ").", false);
+        } else {
+            // Нічого не знайшли
             taSearchResult.setText(
                     "✗  Not found.\n\n"
                             + "No book with UUID:\n  " + input + "\n\n"
                             + "Make sure the library is up to date.");
             setStatus("✗ Not found for UUID: " + input.substring(0, 8) + "…", true);
-        } else {
-            taSearchResult.setText(buildFullInfo(entry.getBook(), entry.getQuantity()));
-            setStatus("✓ Found: " + entry.getBook().getShortInfo(), false);
         }
     }
 
