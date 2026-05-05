@@ -100,9 +100,10 @@ public class BookManager {
             switch (choice) {
                 case 1 -> searchMenu();
                 case 2 -> createObject();
-                case 3 -> printAllBooks();
-                case 4 -> sortBooks();
-                case 5 -> {
+                case 3 -> modifyBook();
+                case 4 -> printAllBooks();
+                case 5 -> sortBooks();
+                case 6 -> {
                     saveBooks();
                     System.out.println("Goodbye!");
                     running = false;
@@ -123,8 +124,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v9.1            ║");
-        System.out.println("║ Library | Comparator λ | TXT+JSON storage║");
+        System.out.println("║            BOOK MANAGER  v11.0           ║");
+        System.out.println("║Library | Modify+Delete | TXT+JSON storage║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -165,9 +166,10 @@ public class BookManager {
         System.out.println("==========================================");
         System.out.println("1. Search book");
         System.out.println("2. Create new book");
-        System.out.println("3. Show all books");
-        System.out.println("4. Sort books");
-        System.out.println("5. Exit");
+        System.out.println("3. Modify book");
+        System.out.println("4. Show all books");
+        System.out.println("5. Sort books");
+        System.out.println("6. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -398,7 +400,84 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 3: Виведення всіх книг
+    // Пункт 3: Модифікація книги
+    // ---------------------------------------------------------------
+
+    private void modifyBook() {
+        System.out.println("\n--- Modify book ---");
+        if (library.getEntryCount() == 0) {
+            System.out.println("  (library is empty)\n");
+            return;
+        }
+        printAllBooks();
+
+        int idx = readInt("Select book number: ") - 1;
+        if (idx < 0 || idx >= library.getEntryCount()) {
+            System.out.println("  [!] Invalid number.\n");
+            return;
+        }
+
+        BookEntry entry = library.getEntry(idx);
+        Book book = entry.getBook();
+
+        System.out.println("  Selected: \"" + book.getTitle()+"\" by "+ book.getAuthor());
+        System.out.println("  Attributes:");
+        System.out.println("    1. Title");
+        System.out.println("    2. Author");
+        System.out.println("    3. Year");
+        System.out.println("    4. Price");
+        System.out.println("    5. Genre");
+        System.out.println("    6. Pages");
+        System.out.println("    7. Quantity");
+
+        if (book instanceof EBook) {
+            System.out.println("    8. File format");
+            System.out.println("    9. File size (MB)");
+            System.out.println("   10. Download URL");
+        } else if (book instanceof AudioBook) {
+            // Continue ...
+        }
+        System.out.println("    0. Cancel");
+
+        int attr = readInt("  Attribute: ");
+        if (attr == 0) {
+            System.out.println("  Cancelled.\n");
+            return;
+        }
+
+        try {
+            boolean changed = applyModification(entry, book, attr);
+            if (!changed) {
+                System.out.println("  [!] Unknown attribute for this book type.\n");
+                return;
+            }
+            boolean result = library.update(entry, entry);
+            if (result) {
+                System.out.println("  [OK] Book updated.\n");
+            } else {
+                System.out.println("  [!] Book not found in library.\n");
+            }
+        } catch (InvalidBookDataException e) {
+            System.out.println("  [!] " + e.getMessage() + "\n");
+        }
+    }
+
+    private boolean applyModification(BookEntry entry, Book book, int attr) {
+        if (attr == 1) { book.setTitle(readNonEmptyString("New title:  ")); return true; }
+        if (attr == 2) { book.setAuthor(readNonEmptyString("New author: ")); return true; }
+        if (attr == 3) { book.setYear(readInt("New year:   "));  return true; }
+        if (attr == 4) { book.setPrice(readDouble("New price ($): ")); return true; }
+        if (attr == 5) { book.setGenre(readEnum(Genre.values(), "New genre")); return true; }
+        if (attr == 6) { book.setPages(readInt("New pages:  ")); return true; }
+        if (attr == 7) { entry.setQuantity(readInt("New quantity: ")); return true; }
+
+        // Специфічні поля для різних класів
+        // if (attr >7) instance of EBook / AudioBook / ...
+        return false;
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 4: Виведення всіх книг
     // ---------------------------------------------------------------
 
     /**
@@ -424,7 +503,7 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 4: Меню сортування та виведення відсортованих книг
+    // Пункт 5: Меню сортування та виведення відсортованих книг
     // ---------------------------------------------------------------
 
     /**
