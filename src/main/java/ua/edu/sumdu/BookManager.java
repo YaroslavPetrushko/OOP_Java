@@ -27,7 +27,6 @@ import java.util.*;
  *   <li>За автором</li>
  *   <li>За жанром</li>
  *   <li>За діапазоном ціни</li>
- *   <li>За UUID</li>
  * </ol>
  *
  * <p>Ієрархія підтримуваних класів:</p>
@@ -105,9 +104,11 @@ public class BookManager {
             switch (choice) {
                 case 1 -> searchMenu();
                 case 2 -> createObject();
-                case 3 -> printAllBooks();
-                case 4 -> sortBooks();
-                case 5 -> {
+                case 3 -> modifyBook();
+                case 4 -> deleteBook();
+                case 5 -> printAllBooks();
+                case 6 -> sortBooks();
+                case 7 -> {
                     saveBooks();
                     System.out.println("Goodbye!");
                     running = false;
@@ -128,8 +129,8 @@ public class BookManager {
      */
     private void printBanner() {
         System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║            BOOK MANAGER  v10.0           ║");
-        System.out.println("║  UUID | Identifiable | TXT+JSON storage  ║");
+        System.out.println("║            BOOK MANAGER  v11.0           ║");
+        System.out.println("║Library | Modify+Delete | TXT+JSON storage║");
         System.out.println("╚══════════════════════════════════════════╝");
     }
 
@@ -170,9 +171,11 @@ public class BookManager {
         System.out.println("==========================================");
         System.out.println("1. Search book");
         System.out.println("2. Create new book");
-        System.out.println("3. Show all books");
-        System.out.println("4. Sort books");
-        System.out.println("5. Exit");
+        System.out.println("3. Modify book");
+        System.out.println("4. Delete book");
+        System.out.println("5. Show all books");
+        System.out.println("6. Sort books");
+        System.out.println("7. Exit");
         System.out.print("Your choice: ");
     }
 
@@ -199,7 +202,7 @@ public class BookManager {
     /**
      * Підменю вибору критерію пошуку.
      *
-     * <p>Пункти 1–3 — класичний пошук; пункт {@code 4} — пошук за UUID;
+     * <p>Пункти 1–3 — класичний пошук;
      * пункт {@code 0} — повернення до головного меню.</p>
      */
     private void searchMenu() {
@@ -207,7 +210,6 @@ public class BookManager {
             System.out.println("  1. By author");
             System.out.println("  2. By genre");
             System.out.println("  3. By price range");
-            System.out.println("  4. By UUID");
             System.out.println("  0. Back to main menu");
             System.out.print("Criterion: ");
 
@@ -218,7 +220,6 @@ public class BookManager {
                 case 1 -> searchByAuthor();
                 case 2 -> searchByGenre();
                 case 3 -> searchByPriceRange();
-                case 4 -> searchByUuid();
                 case 0 -> System.out.println("  Cancelled.\n");
                 default -> System.out.println("  [!] Unknown criterion.\n");
             }
@@ -247,24 +248,6 @@ public class BookManager {
         printSearchResult(result,
                 "price in [$" + String.format("%.2f", minPrice)
                         + " .. $" + String.format("%.2f", maxPrice) + "]");
-    }
-
-    // Пошук книги за UUID
-    private void searchByUuid() {
-        String uuidString = readNonEmptyString("Enter UUID (full or partial): ").trim();
-        BookEntry result;
-
-        try {
-            // Намагаємось перевірити, чи це валідний повний UUID
-            UUID.fromString(uuidString);
-            // Якщо помилки немає, значить формат повний
-            result = library.findByFullUuid(uuidString);
-        } catch (IllegalArgumentException e) {
-            // Якщо зловили помилку, значить користувач ввів короткий UUID
-            result = library.findByShortUuid(uuidString);
-        }
-
-        printSearchByIdResult(result, "UUID = " + uuidString);
     }
 
     /**
@@ -441,7 +424,184 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 3: Виведення всіх книг
+    // Пункт 3: Модифікація книги
+    // ---------------------------------------------------------------
+
+    /**
+     * Показує список книг, дає вибрати одну, потім — атрибут для зміни.
+     * Після введення нового значення викликає {@link Library#update}.
+     */
+    private void modifyBook() {
+        System.out.println("\n--- Modify book ---");
+        if (library.getEntryCount() == 0) {
+            System.out.println("  (library is empty)\n");
+            return;
+        }
+        printAllBooks();
+
+        int idx = readInt("Select book number: ") - 1;
+        if (idx < 0 || idx >= library.getEntryCount()) {
+            System.out.println("  [!] Invalid number.\n");
+            return;
+        }
+
+        BookEntry entry = library.getEntry(idx);
+        Book book = entry.getBook();
+
+        System.out.println("  Selected: \"" + book.getTitle()+"\" by "+ book.getAuthor());
+        System.out.println("  Attributes:");
+        System.out.println("    1. Title");
+        System.out.println("    2. Author");
+        System.out.println("    3. Year");
+        System.out.println("    4. Price");
+        System.out.println("    5. Genre");
+        System.out.println("    6. Pages");
+        System.out.println("    7. Quantity");
+
+        if (book instanceof EBook) {
+            System.out.println("    8. File format");
+            System.out.println("    9. File size (MB)");
+            System.out.println("   10. Download URL");
+        } else if (book instanceof AudioBook) {
+            System.out.println("    8. Narrator");
+            System.out.println("    9. Duration (minutes)");
+            System.out.println("   10. Audio format");
+        } else if (book instanceof RareBook) {
+            System.out.println("    8. Publisher");
+            System.out.println("    9. Edition");
+            System.out.println("   10. Weight (g)");
+            System.out.println("   11. Condition");
+            System.out.println("   12. Estimated value ($)");
+            System.out.println("   13. Acquisition year");
+        } else if (book instanceof PaperBook) {
+            System.out.println("    8. Publisher");
+            System.out.println("    9. Edition");
+            System.out.println("   10. Weight (g)");
+        }
+        System.out.println("    0. Cancel");
+
+        int attr = readInt("  Attribute: ");
+        if (attr == 0) {
+            System.out.println("  Cancelled.\n");
+            return;
+        }
+
+        try {
+            boolean changed = applyModification(entry, book, attr);
+            if (!changed) {
+                System.out.println("  [!] Unknown attribute for this book type.\n");
+                return;
+            }
+            boolean result = library.update(entry, entry);
+            if (result) {
+                System.out.println("  [OK] Book updated.\n");
+            } else {
+                System.out.println("  [!] Book not found in library.\n");
+            }
+        } catch (InvalidBookDataException e) {
+            System.out.println("  [!] " + e.getMessage() + "\n");
+        }
+    }
+
+    /**
+     * Застосовує зміну атрибута до книги або запису за обраним номером.
+     * Спочатку перевіряє загальні поля (1–7), потім делегує до методу підтипу.
+     *
+     * @param entry запис (для зміни quantity)
+     * @param book  книга (для зміни решти полів)
+     * @param attr  номер обраного атрибута
+     * @return {@code true} якщо атрибут розпізнано і змінено
+     */
+    private boolean applyModification(BookEntry entry, Book book, int attr) {
+        if (attr == 1) { book.setTitle(readNonEmptyString("New title:  "));      return true; }
+        if (attr == 2) { book.setAuthor(readNonEmptyString("New author: "));     return true; }
+        if (attr == 3) { book.setYear(readInt("New year:   "));                  return true; }
+        if (attr == 4) { book.setPrice(readDouble("New price ($): "));           return true; }
+        if (attr == 5) { book.setGenre(readEnum(Genre.values(), "New genre"));   return true; }
+        if (attr == 6) { book.setPages(readInt("New pages:  "));                 return true; }
+        if (attr == 7) { entry.setQuantity(readInt("New quantity: "));           return true; }
+
+        // Специфічні поля — порядок важливий: RareBook перед PaperBook
+        if (book instanceof RareBook  rb) return applyRareBookModification(rb,  attr);
+        if (book instanceof PaperBook pb) return applyPaperBookModification(pb, attr);
+        if (book instanceof EBook     eb) return applyEBookModification(eb,     attr);
+        if (book instanceof AudioBook ab) return applyAudioBookModification(ab, attr);
+        return false;
+    }
+
+    private boolean applyEBookModification(EBook eb, int attr) {
+        if (attr == 8)  { eb.setFileFormat(readNonEmptyString("New file format: "));      return true; }
+        if (attr == 9)  { eb.setFileSizeMB(readDouble("New file size (MB): "));           return true; }
+        if (attr == 10) { eb.setDownloadUrl(readNonEmptyString("New download URL: "));    return true; }
+        return false;
+    }
+
+    private boolean applyAudioBookModification(AudioBook ab, int attr) {
+        if (attr == 8)  { ab.setNarrator(readNonEmptyString("New narrator: "));           return true; }
+        if (attr == 9)  { ab.setDurationMinutes(readInt("New duration (minutes): "));     return true; }
+        if (attr == 10) { ab.setAudioFormat(readNonEmptyString("New audio format: "));    return true; }
+        return false;
+    }
+
+    private boolean applyPaperBookModification(PaperBook pb, int attr) {
+        if (attr == 8)  { pb.setPublisher(readNonEmptyString("New publisher: "));         return true; }
+        if (attr == 9)  { pb.setEdition(readInt("New edition: "));                        return true; }
+        if (attr == 10) { pb.setWeightGrams(readDouble("New weight (g): "));              return true; }
+        return false;
+    }
+
+    private boolean applyRareBookModification(RareBook rb, int attr) {
+        if (attr == 8)  { rb.setPublisher(readNonEmptyString("New publisher: "));         return true; }
+        if (attr == 9)  { rb.setEdition(readInt("New edition: "));                        return true; }
+        if (attr == 10) { rb.setWeightGrams(readDouble("New weight (g): "));              return true; }
+        if (attr == 11) { rb.setCondition(readEnum(BookCondition.values(), "New condition")); return true; }
+        if (attr == 12) { rb.setEstimatedValueUSD(readDouble("New estimated value ($): ")); return true; }
+        if (attr == 13) { rb.setAcquisitionYear(readInt("New acquisition year: "));       return true; }
+        return false;
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 4: Видалення книги
+    // ---------------------------------------------------------------
+
+    /**
+     * Показує список книг, дозволяє вибрати одну за номером,
+     * запитує підтвердження та викликає {@link Library#delete}.
+     */
+    private void deleteBook() {
+        System.out.println("\n--- Delete book ---");
+        if (library.getEntryCount() == 0) {
+            System.out.println("  (library is empty)\n");
+            return;
+        }
+        printAllBooks();
+
+        int idx = readInt("Select book number to delete: ") - 1;
+        if (idx < 0 || idx >= library.getEntryCount()) {
+            System.out.println("  [!] Invalid number.\n");
+            return;
+        }
+
+        BookEntry entry = library.getEntry(idx);
+        System.out.println("  Selected: \"" + entry.getBook().getTitle()+"\" by "+ entry.getBook().getAuthor());
+        System.out.print("  Confirm deletion (y/n): ");
+        String confirm = scanner.nextLine().trim().toLowerCase();
+
+        if (!confirm.equals("y") && !confirm.equals("yes")) {
+            System.out.println("  Cancelled.\n");
+            return;
+        }
+
+        boolean result = library.delete(entry);
+        if (result) {
+            System.out.println("  [OK] Book deleted. Library size: " + library.getEntryCount() + "\n");
+        } else {
+            System.out.println("  [!] Book not found in library.\n");
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Пункт 5: Виведення всіх книг
     // ---------------------------------------------------------------
 
     /**
@@ -467,7 +627,7 @@ public class BookManager {
     }
 
     // ---------------------------------------------------------------
-    // Пункт 4: Меню сортування та виведення відсортованих книг
+    // Пункт 6: Меню сортування та виведення відсортованих книг
     // ---------------------------------------------------------------
 
     /**

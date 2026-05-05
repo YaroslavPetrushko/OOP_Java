@@ -775,4 +775,57 @@ class BookTest {
 
         assertEquals(before, library.getEntryCount());
     }
+
+    // ---------------------------------------------------------------
+    // update
+    // ---------------------------------------------------------------
+
+    @Test
+    void update_existingEntry_returnsTrue() {
+        BookEntry entry = library.getEntry(0);
+        assertTrue(library.update(entry, entry));
+    }
+
+    @Test
+    void update_nonExistingEntry_returnsFalse() {
+        BookEntry stranger = new BookEntry(
+                new EBook("Unknown", "Nobody", 2020, 1.0, Genre.FICTION, 100,
+                        "PDF", 1.0, "https://x.com"), 1);
+        assertFalse(library.update(stranger, stranger));
+    }
+
+    @Test
+    void update_nullArgs_returnsFalse() {
+        assertFalse(library.update(null, null));
+        assertFalse(library.update(library.getEntry(0), null));
+        assertFalse(library.update(null, library.getEntry(0)));
+    }
+
+    @Test
+    void update_emptyLibrary_returnsFalse() {
+        Library empty = new Library("Empty", "Nowhere");
+        BookEntry entry = new BookEntry(cleanCode, 1);
+        assertFalse(empty.update(entry, entry));
+    }
+
+    @Test
+    void update_changesTitle_persistsInLibrary() {
+        BookEntry entry = library.getEntry(0);
+        String oldTitle = entry.getBook().getTitle();
+
+        entry.getBook().setTitle("Modified Title");
+        library.update(entry, entry);
+
+        assertEquals("Modified Title", library.getEntry(0).getBook().getTitle());
+        assertNotEquals(oldTitle, library.getEntry(0).getBook().getTitle());
+    }
+
+    @Test
+    void update_doesNotChangeCount() {
+        int before = library.getEntryCount();
+        BookEntry entry = library.getEntry(0);
+        library.update(entry, entry);
+        assertEquals(before, library.getEntryCount());
+    }
+
 }

@@ -182,6 +182,40 @@ public class Library {
         // entries.addAll(newOrder);
     }
 
+    /**
+     * Знаходить запис у колекції за допомогою {@code equals()} та замінює його.
+     *
+     * @param existingObject запис для пошуку
+     * @param newObject      запис-замінник
+     * @return {@code true} якщо знайдено і замінено, {@code false} якщо не знайдено
+     */
+    public boolean update(BookEntry existingObject, BookEntry newObject) {
+        if (existingObject == null || newObject == null) return false;
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).equals(existingObject)) {
+                entries.set(i, newObject);
+                return true;
+            }
+        }
+        return false;
+    }
+    /**
+     * Знаходить запис у колекції за допомогою {@code equals()} та видаляє його.
+     *
+     * @param existingObject запис для видалення
+     * @return {@code true} якщо знайдено і видалено, {@code false} якщо не знайдено
+     */
+    public boolean delete(BookEntry existingObject) {
+        if (existingObject == null) return false;
+        for (int i = 0; i < entries.size(); i++) {
+            if (entries.get(i).equals(existingObject)) {
+                entries.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ---------------------------------------------------------------
     // Методи пошуку (не змінюють колекцію)
     // ---------------------------------------------------------------
