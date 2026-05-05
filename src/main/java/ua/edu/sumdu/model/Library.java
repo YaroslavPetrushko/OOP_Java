@@ -182,37 +182,54 @@ public class Library {
     }
 
     /**
-     * Знаходить запис у колекції за допомогою {@code equals()} та замінює його.
+     * Знаходить запис за {@code equals()} та замінює його на {@code newObject}.
      *
-     * @param existingObject запис для пошуку
-     * @param newObject      запис-замінник
-     * @return {@code true} якщо знайдено і замінено, {@code false} якщо не знайдено
+     * @throws ObjectNotFoundException   якщо {@code existingObject} не знайдено
+     * @throws DuplicateObjectException  якщо {@code newObject} вже існує як інший запис
+     * @throws InvalidBookDataException  якщо будь-який аргумент {@code null}
      */
-    public boolean update(BookEntry existingObject, BookEntry newObject) {
-        if (existingObject == null || newObject == null) return false;
+    public void update(BookEntry existingObject, BookEntry newObject) {
+        if (existingObject == null || newObject == null) {
+            throw new InvalidBookDataException("Arguments for update cannot be null.");
+        }
+        int foundIndex = -1;
         for (int i = 0; i < entries.size(); i++) {
             if (entries.get(i).equals(existingObject)) {
-                entries.set(i, newObject);
-                return true;
+                foundIndex=i;
+                break;
             }
         }
-        return false;
+        if (foundIndex == -1) {
+            throw new ObjectNotFoundException(
+                    "Book not found: \"" + existingObject.getBook().getTitle()+ "\" by " + existingObject.getBook().getAuthor());
+        }
+        for (int i = 0; i < entries.size(); i++) {
+            if (i != foundIndex && entries.get(i).equals(newObject)) {
+                throw new DuplicateObjectException(
+                        "A book with these details already exists in the library.");
+            }
+        }
+        entries.set(foundIndex, newObject);
     }
+
     /**
-     * Знаходить запис у колекції за допомогою {@code equals()} та видаляє його.
+     * Знаходить запис за {@code equals()} та видаляє його.
      *
-     * @param existingObject запис для видалення
-     * @return {@code true} якщо знайдено і видалено, {@code false} якщо не знайдено
+     * @throws ObjectNotFoundException  якщо {@code existingObject} не знайдено
+     * @throws InvalidBookDataException якщо аргумент {@code null}
      */
-    public boolean delete(BookEntry existingObject) {
-        if (existingObject == null) return false;
+    public void delete(BookEntry existingObject) {
+        if (existingObject == null) {
+            throw new InvalidBookDataException("Argument for delete cannot be null.");
+        }
         for (int i = 0; i < entries.size(); i++) {
             if (entries.get(i).equals(existingObject)) {
                 entries.remove(i);
-                return true;
+                return;
             }
         }
-        return false;
+        throw new ObjectNotFoundException(
+                "Book not found: \"" + existingObject.getBook().getTitle()+ "\" by " + existingObject.getBook().getAuthor());
     }
 
     // ---------------------------------------------------------------
